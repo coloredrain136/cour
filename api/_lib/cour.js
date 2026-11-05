@@ -1,7 +1,7 @@
 // Cour — shared server helpers (not a route: files in api/_lib are private).
 const crypto = require('crypto');
 
-const VERSION = 'cour-3';
+const VERSION = 'cour-4';
 
 // App-facing names → real Supabase tables (Builds project, cour_ prefix).
 const TABLES = {

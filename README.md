@@ -1,4 +1,4 @@
-# Cour (cour-3)
+# Cour (cour-4)
 
 Personal anime tracker. Single `index.html`, no build step. Supabase (Builds project, `cour_` tables) + Vercel.
 

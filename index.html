@@ -325,7 +325,7 @@ const pad = (n) => String(n).padStart(2, '0');
 const nowMs = () => Date.now();
 const iso = () => new Date().toISOString();
 const today = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
-const APP_VERSION = 'cour-3';
+const APP_VERSION = 'cour-4';
 const LS = {
   get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
@@ -777,7 +777,7 @@ function renderHome() {
   let h = `<div class="hdr"><div><h1>Up Next</h1><div class="sub">${d}<span id="syncdot" class="syncdot"></span></div></div></div>`;
   if (!S.shows.size) {
     h += `<div class="card empty fadein"><div class="big">${I.sparkle}</div><h2>Welcome to Cour</h2><p>Bring your MyAnimeList over as-is, or search for something to watch.</p>
-      <div class="stack" style="margin-top:22px"><button class="btn pri block" data-act="import">${I.upload} Import my MAL list</button><button class="btn block" data-act="tab" data-tab="search">${I.search} Search anime</button></div></div>`;
+      <div class="stack" style="margin-top:22px"><button class="btn pri block" data-act="import">${I.upload} Import my list</button><button class="btn block" data-act="tab" data-tab="search">${I.search} Search anime</button></div></div>`;
     el.innerHTML = h; return;
   }
   const w = [...S.shows.values()].filter((s) => s.status === 'watching');
@@ -1223,7 +1223,7 @@ function renderSettings() {
     <div class="row"><div class="lbl">New shows default to</div><div class="segc"><button class="${dl === 'sub' ? 'on' : ''}" data-act="deflang" data-v="sub">Sub</button><button class="${dl === 'dub' ? 'on' : ''}" data-act="deflang" data-v="dub">Dub</button></div></div>
   </div>`;
   h += `<div class="sec">Your list</div><div class="card grp">
-    <button class="row" style="width:100%;text-align:left" data-act="import"><div class="lbl">Import from MyAnimeList<small>Brings the export in as-is</small></div>${I.chev}</button>
+    <button class="row" style="width:100%;text-align:left" data-act="import"><div class="lbl">Import my list<small>From AniList (MyAniList app) or a MyAnimeList export</small></div>${I.chev}</button>
     <button class="row" style="width:100%;text-align:left" data-act="refresh"><div class="lbl">Refresh release data<small>${metaAt ? 'Last refreshed ' + ago(new Date(metaAt).toISOString()) : 'Not yet'}${S.schedOff ? ' · Dub schedule not connected' : ''}</small></div>${I.refresh.replace('<svg', '<svg class="chev"')}</button>
     <button class="row" style="width:100%;text-align:left" data-act="export"><div class="lbl">Export backup<small>Full JSON of your list + settings</small></div>${I.download.replace('<svg', '<svg class="chev"')}</button>
   </div>`;
@@ -1318,16 +1318,22 @@ function openImport() {
   o.state = { step: 'pick' };
   o.render = () => {
     const st = o.state;
-    let h = `<h2>Import from MyAnimeList</h2>`;
+    let h = `<h2>Import your list</h2>`;
     if (st.step === 'pick') {
-      h += `<div class="card" style="padding:16px;line-height:1.5"><b>Get your export</b><div class="muted" style="font-size:14.5px;margin-top:6px">On MAL go to <b>Profile → Export</b> (myanimelist.net/panel.php?go=export), pick <b>Anime List</b>, and download it. You'll get a <b>.xml.gz</b> file — pick it here as-is, no unzipping or cleanup.</div></div>
-        <label class="btn pri block" style="margin-top:14px">${I.upload} Choose export file<input type="file" id="malfile" hidden></label>
-        ${st.err ? `<p style="color:var(--bad);margin:12px 4px">${esc(st.err)}</p>` : ''}`;
+      h += `<div class="card" style="padding:16px;line-height:1.5"><b>From AniList</b><div class="muted" style="font-size:14.5px;margin-top:6px">If you track in the <b>MyAniList</b> app, your list lives on AniList. Type your AniList username and Cour pulls everything in: status, progress, scores and dates.</div>
+          <input class="field" id="aniuser" style="margin-top:12px" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="AniList username" value="${esc(setting('anilist_user', ''))}">
+          <button class="btn pri block" style="margin-top:10px" data-act="aniload">Load my AniList</button></div>
+        ${st.err ? `<p style="color:var(--bad);margin:12px 4px">${esc(st.err)}</p>` : ''}
+        <div class="sec">Or from MyAnimeList</div>
+        <div class="card" style="padding:16px;line-height:1.5"><b>Get your export</b><div class="muted" style="font-size:14.5px;margin-top:6px">On MAL go to <b>Profile → Export</b> (myanimelist.net/panel.php?go=export), pick <b>Anime List</b>, and download it. You'll get a <b>.xml.gz</b> file — pick it here as-is, no unzipping or cleanup.</div></div>
+        <label class="btn block" style="margin-top:14px">${I.upload} Choose export file<input type="file" id="malfile" hidden></label>`;
     } else if (st.step === 'review') {
       const c = {}; st.entries.forEach((e) => (c[e.status] = (c[e.status] || 0) + 1));
       h += `<div class="card grp">${STATUS.map(([k, l]) => `<div class="row"><div class="lbl">${k === 'plan' ? 'Plan to Watch' : l}</div><b>${c[k] || 0}</b></div>`).join('')}</div>
-        <p class="muted" style="font-size:14px;margin:12px 4px">${st.fresh.length} new${st.entries.length - st.fresh.length ? ` · ${st.entries.length - st.fresh.length} already in Cour (skipped)` : ''}. Shows you're "Watching" will get a quick keep/hold/drop check in the inbox — that's the cleanup.</p>
+        <p class="muted" style="font-size:14px;margin:12px 4px">${st.fresh.length} new${st.entries.length - st.fresh.length ? ` · ${st.entries.length - st.fresh.length} already in Cour (skipped)` : ''}. ${st.source === 'anilist' ? 'Watching shows you haven\'t touched in a while get a quick keep/hold/drop check in the inbox.' : 'Shows you\'re "Watching" will get a quick keep/hold/drop check in the inbox — that\'s the cleanup.'}</p>
         <button class="btn pri block" data-act="impgo" ${st.fresh.length ? '' : 'disabled'}>Import ${st.fresh.length} shows</button>`;
+    } else if (st.step === 'loading') {
+      h += `<p class="muted">Loading ${esc(st.user)}'s list from AniList…</p><div class="progbar"><i style="width:40%"></i></div>`;
     } else if (st.step === 'run') {
       h += `<p class="muted">Matching your list with AniList for covers, titles and episode counts…</p><div class="progbar"><i style="width:${Math.round((st.done / st.total) * 100)}%"></i></div><p class="faint" style="font-size:13px">${st.done} / ${st.total}</p>`;
     } else if (st.step === 'done') {
@@ -1347,7 +1353,45 @@ function openImport() {
     } catch (err) { o.state = { step: 'pick', err: err.message }; }
     refreshSheet(o);
   });
+  o.loadAni = async () => {
+    const user = (o.sh.querySelector('#aniuser').value || '').trim().replace(/^@/, '');
+    if (!user) { o.state = { step: 'pick', err: 'Type your AniList username first.' }; return refreshSheet(o); }
+    o.state = { step: 'loading', user }; refreshSheet(o);
+    try {
+      const d = await ani(`query($u:String){MediaListCollection(userName:$u,type:ANIME){lists{entries{status progress score(format:POINT_10_DECIMAL) updatedAt startedAt{year month day} completedAt{year month day} media{${MF}}}}}}`, { u: user });
+      const map = { CURRENT: 'watching', REPEATING: 'watching', COMPLETED: 'completed', PAUSED: 'on_hold', DROPPED: 'dropped', PLANNING: 'plan' };
+      const fd = (x) => (x && x.year ? `${x.year}-${pad(x.month || 1)}-${pad(x.day || 1)}` : null);
+      const seen = new Set(), entries = [];
+      for (const l of d.MediaListCollection.lists || []) for (const e of l.entries || []) {
+        if (!e.media || seen.has(e.media.id)) continue; seen.add(e.media.id);
+        entries.push({ media: e.media, status: map[e.status] || 'plan', watched: e.progress || 0, score: e.score || 0, start: fd(e.startedAt), finish: fd(e.completedAt), updated: e.updatedAt ? new Date(e.updatedAt * 1000).toISOString() : null });
+      }
+      if (!entries.length) throw new Error('That list is empty.');
+      setSetting('anilist_user', user);
+      o.state = { step: 'review', source: 'anilist', entries, fresh: entries.filter((x) => !S.shows.has(x.media.id)) };
+    } catch (err) {
+      const msg = /not found|private/i.test(err.message) ? `Couldn't find "${user}" on AniList, or that list is private. Check the spelling (it's the name on your MyAniList profile), or set the list to public in AniList settings.` : 'AniList: ' + err.message;
+      o.state = { step: 'pick', err: msg };
+    }
+    refreshSheet(o);
+  };
   o.run = async () => {
+    if (o.state.source === 'anilist') {
+      const rows = [];
+      for (const e of o.state.fresh) {
+        const r = newRow(e.media, e.status);
+        r.eps_watched = r.total_eps ? Math.min(e.watched, r.total_eps) : e.watched;
+        if (e.status === 'completed' && r.total_eps) r.eps_watched = r.total_eps;
+        r.rating = e.score ? Math.min(5, Math.max(0.5, Math.round(e.score) / 2)) : null;
+        r.started_at = e.start; r.completed_at = e.finish;
+        r.last_watched_at = e.updated;
+        rows.push(r);
+      }
+      putShows(rows); recomputeFranchises(); staleCheck(); render();
+      o.state = { step: 'done', added: rows.length, missed: [] }; refreshSheet(o);
+      refreshDub(true).catch(() => {});
+      return;
+    }
     const fresh = o.state.fresh;
     o.state = { step: 'run', done: 0, total: fresh.length }; refreshSheet(o);
     let media;
@@ -1542,6 +1586,7 @@ const ACT = {
   clearq: () => { $('#q').value = ''; onQ(); $('#q').focus(); },
   import: () => openImport(),
   impgo: () => { const o = sheets.find((x) => x.kind === 'import'); o && o.run(); },
+  aniload: () => { const o = sheets.find((x) => x.kind === 'import'); o && o.loadAni(); },
   export: () => exportJSON(),
   refresh: async (el) => { toast('Refreshing…'); try { await refreshMeta(true); await refreshDub(true); toast('Release data updated'); } catch (e) { toast('Refresh failed: ' + e.message); } },
   staledays: (el) => { setSetting('stale_days', Number(el.dataset.v)); renderSettings(); },
