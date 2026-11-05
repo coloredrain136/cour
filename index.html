@@ -1,0 +1,1628 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cour">
+<meta name="theme-color" content="#0b0d1a">
+<title>Cour</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" href="/favicon.png">
+<link rel="preconnect" href="https://graphql.anilist.co">
+<link rel="preconnect" href="https://s4.anilist.co">
+<script>
+/* Paint the saved theme before anything renders (no flash). */
+try{var t=JSON.parse(localStorage.getItem('cour:themecss')||'null');if(t){var r=document.documentElement;for(var k in t)r.style.setProperty(k,t[k]);}}catch(e){}
+</script>
+<style>
+/* ═════════════ TOKENS ═════════════
+   Everything visual comes from these. Themes only change tokens. */
+:root{
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px;
+  --r-card:22px; --r-btn:16px; --r-sm:12px; --r-pill:999px;
+  --base:#07080f;
+  --wall:radial-gradient(120% 80% at 90% 0%,#5b3fd6 0%,transparent 55%),radial-gradient(90% 70% at 0% 100%,#b23a8a 0%,transparent 60%),radial-gradient(80% 60% at 20% 20%,#1d2a6b 0%,transparent 70%);
+  --wall-filter:none; --wall-dim:0;
+  --text:#f4f5fb; --text-2:rgba(244,245,251,.68); --text-3:rgba(244,245,251,.42);
+  --accent:#8b7cff; --accent-ink:#fff; --accent-soft:rgba(139,124,255,.18);
+  --card:rgba(255,255,255,.075); --card-2:rgba(255,255,255,.12);
+  --chrome:rgba(22,20,40,.55); --sheet:rgba(20,18,34,.78);
+  --stroke:rgba(255,255,255,.12); --stroke-2:rgba(255,255,255,.2);
+  --hi:inset 0 1px 0 rgba(255,255,255,.16);
+  --shadow:0 10px 30px rgba(0,0,0,.28);
+  --bf:blur(24px) saturate(170%);
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+  --good:#3ddc97; --warn:#ffb547; --bad:#ff6b6b;
+  --tab-h:64px; --sb:env(safe-area-inset-bottom,0px); --st:env(safe-area-inset-top,0px);
+  --kb:0px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--base);color:var(--text);font-family:var(--font);-webkit-font-smoothing:antialiased;overscroll-behavior:none}
+body{position:fixed;inset:0;overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+input,textarea,select{font:inherit;color:inherit;-webkit-user-select:text;user-select:text}
+img{display:block}
+a{color:inherit;text-decoration:none}
+
+/* ═════════════ BACKGROUND ═════════════ */
+#bg{position:fixed;inset:-40px;background:var(--wall),var(--base);background-size:cover;background-position:center;filter:var(--wall-filter);transform:translateZ(0)}
+#bg::after{content:"";position:absolute;inset:0;background:var(--base);opacity:var(--wall-dim)}
+
+/* ═════════════ GLASS PRIMITIVES ═════════════ */
+.card{position:relative;background:var(--card);border:1px solid var(--stroke);border-radius:var(--r-card);box-shadow:var(--hi),var(--shadow)}
+.card::before{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(180deg,rgba(255,255,255,.07),transparent 38%);pointer-events:none}
+.chrome{background:var(--chrome);-webkit-backdrop-filter:var(--bf);backdrop-filter:var(--bf);border:1px solid var(--stroke);box-shadow:var(--hi),0 8px 28px rgba(0,0,0,.25)}
+
+/* ═════════════ LAYOUT ═════════════ */
+.screen{position:fixed;inset:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:calc(var(--st) + 14px) var(--s4) calc(var(--tab-h) + var(--sb) + 40px);display:none}
+.screen.on{display:block}
+.screen.lib{padding-bottom:calc(var(--tab-h) + var(--sb) + 104px)}
+.screen.srch{padding-bottom:calc(var(--tab-h) + var(--sb) + 110px + var(--kb))}
+.hdr{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--s3);margin:var(--s5) 2px var(--s4)}
+.hdr h1{font-size:34px;line-height:1.05;letter-spacing:-.02em;margin:0;font-weight:750}
+.hdr .sub{color:var(--text-2);font-size:14px;margin-top:6px;font-weight:500}
+.sec{font-size:13px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3);margin:var(--s5) 4px var(--s2)}
+.stack>*+*{margin-top:var(--s3)}
+.muted{color:var(--text-2)} .faint{color:var(--text-3)}
+
+/* ═════════════ TAB BAR ═════════════ */
+#tabs{position:fixed;left:var(--s3);right:var(--s3);bottom:calc(var(--sb) + 8px);height:var(--tab-h);border-radius:var(--r-pill);display:flex;padding:6px;z-index:30}
+#tabs button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border-radius:var(--r-pill);color:var(--text-3);font-size:10.5px;font-weight:650;transition:color .2s,background .2s;position:relative}
+#tabs button svg{width:24px;height:24px}
+#tabs button.on{color:var(--accent);background:var(--accent-soft)}
+#tabs .dot{position:absolute;top:7px;right:calc(50% - 18px);min-width:17px;height:17px;padding:0 5px;border-radius:9px;background:var(--accent);color:var(--accent-ink);font-size:10.5px;line-height:17px;font-weight:750;display:none}
+
+/* ═════════════ BUTTONS ═════════════ */
+.btn{white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 20px;border-radius:var(--r-btn);font-weight:650;font-size:16px;background:var(--card-2);border:1px solid var(--stroke);transition:transform .12s,opacity .2s}
+.btn:active{transform:scale(.96)}
+.btn.pri{background:var(--accent);color:var(--accent-ink);border-color:transparent;box-shadow:0 6px 20px var(--accent-soft)}
+.btn.sm{height:38px;padding:0 14px;font-size:14px;border-radius:var(--r-sm)}
+.btn.block{width:100%}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--text-2)}
+.btn.danger{color:var(--bad)}
+.btn svg{width:18px;height:18px}
+.iconbtn{width:44px;height:44px;border-radius:var(--r-pill);display:grid;place-items:center;background:var(--card-2);border:1px solid var(--stroke)}
+.iconbtn svg{width:20px;height:20px}
+.iconbtn:active{transform:scale(.92)}
+
+/* ═════════════ COVERS / RING ═════════════ */
+.cov{border-radius:12px;object-fit:cover;background:var(--card-2);flex:none}
+.ring{flex:none;position:relative;width:52px;height:52px}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .trk{stroke:var(--stroke-2)}
+.ring .val{stroke:var(--accent);transition:stroke-dashoffset .7s cubic-bezier(.2,.9,.2,1.15)}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;font-size:13px;font-weight:750}
+
+/* ═════════════ UP NEXT CARDS ═════════════ */
+.nx{display:flex;align-items:center;gap:var(--s3);padding:10px 10px 10px 10px;transition:opacity .35s,transform .35s,max-height .45s,margin .45s,padding .45s;max-height:160px;overflow:hidden}
+.nx .cov{width:64px;height:92px}
+.nx .ring{width:46px;height:46px;align-self:flex-start;margin-top:4px}
+.nx .mid{flex:1;min-width:0}
+.nx .t{font-weight:700;font-size:16px;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.nx .m{font-size:13px;color:var(--text-2);margin-top:4px}
+.nx .acts{display:flex;gap:8px;margin-top:10px}
+.nx .acts .btn{height:38px;font-size:14px;padding:0 12px;border-radius:12px;gap:6px}
+.nx .acts .btn svg{width:16px;height:16px}
+.nx.gone{opacity:0;transform:translateX(30px) scale(.97);max-height:0;padding-top:0;padding-bottom:0;margin-top:0!important}
+.pill{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px;border-radius:var(--r-pill);font-size:11.5px;font-weight:700;background:var(--accent-soft);color:var(--accent)}
+.pill.n{background:var(--card-2);color:var(--text-2)}
+.pill.w{background:rgba(255,181,71,.16);color:var(--warn)}
+
+.inboxcard{display:flex;align-items:center;gap:var(--s3);padding:14px 16px}
+.inboxcard .ic{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent)}
+.inboxcard .ic svg{width:22px;height:22px}
+.inboxcard .cnt{margin-left:auto;min-width:28px;height:28px;border-radius:14px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:800;font-size:14px;padding:0 8px}
+
+.soon{display:flex;gap:10px;overflow-x:auto;margin:0 calc(-1*var(--s4));padding:2px var(--s4) 6px;scrollbar-width:none}
+.soon::-webkit-scrollbar{display:none}
+.soon .card{flex:none;width:200px;padding:10px;display:flex;gap:10px;align-items:center}
+.soon .cov{width:36px;height:52px;border-radius:8px}
+.soon .t{font-size:13px;font-weight:650;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.soon .m{font-size:11.5px;color:var(--text-2);margin-top:3px}
+
+.empty{text-align:center;padding:var(--s7) var(--s5) var(--s5)}
+.empty .big{width:96px;height:96px;margin:0 auto var(--s4);border-radius:50%;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);animation:pop .6s cubic-bezier(.2,.9,.2,1.3)}
+.empty .big svg{width:48px;height:48px}
+.empty h2{margin:0 0 6px;font-size:22px}
+.empty p{margin:0;color:var(--text-2);font-size:15px;line-height:1.4}
+@keyframes pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+
+/* ═════════════ LIBRARY ═════════════ */
+.fr{display:flex;gap:var(--s3);padding:10px;align-items:center;content-visibility:auto;contain-intrinsic-size:auto 96px}
+.fr .cov{width:52px;height:74px;border-radius:10px}
+.fr .mid{flex:1;min-width:0}
+.fr .t{font-weight:680;font-size:15.5px;line-height:1.22;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.fr .m{font-size:12.5px;color:var(--text-2);margin-top:4px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.bar{height:4px;border-radius:2px;background:var(--stroke-2);margin-top:8px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:2px}
+.stack-cov{position:relative;width:60px;height:80px;flex:none}
+.stack-cov img{position:absolute;width:50px;height:72px;border-radius:9px;object-fit:cover;background:var(--card-2);box-shadow:0 4px 12px rgba(0,0,0,.35)}
+.stack-cov img:nth-child(1){left:0;top:6px;transform:rotate(-6deg);opacity:.7}
+.stack-cov img:nth-child(2){left:10px;top:1px}
+.chev{color:var(--text-3);width:18px;height:18px;flex:none}
+
+#seg{position:fixed;left:var(--s3);right:var(--s3);bottom:calc(var(--sb) + var(--tab-h) + 16px);height:48px;border-radius:var(--r-pill);display:none;padding:4px;z-index:29;touch-action:none}
+#seg.on{display:flex}
+#seg .knob{position:absolute;top:4px;bottom:4px;border-radius:var(--r-pill);background:var(--accent);box-shadow:0 4px 14px var(--accent-soft);transition:transform .32s cubic-bezier(.3,1.2,.4,1),width .3s}
+#seg button{flex:1;min-width:0;position:relative;z-index:1;font-size:11.5px;letter-spacing:-.01em;font-weight:700;color:var(--text-2);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;transition:color .2s}
+#seg button small{font-size:10px;opacity:.7;font-weight:650}
+#seg button.on{color:var(--accent-ink)}
+
+/* ═════════════ SEARCH ═════════════ */
+#sbar{position:fixed;left:var(--s3);right:var(--s3);bottom:calc(var(--sb) + var(--tab-h) + 16px);height:52px;border-radius:var(--r-pill);display:none;align-items:center;gap:8px;padding:0 8px 0 16px;z-index:29;transition:transform .15s}
+#sbar.on{display:flex}
+body.kb #sbar{transform:translateY(calc(var(--tab-h) + var(--sb) + 8px - var(--kb)))}
+#sbar svg{width:20px;height:20px;color:var(--text-3);flex:none}
+#sbar input{flex:1;height:100%;background:none;border:0;outline:0;font-size:17px;min-width:0}
+#sbar input::placeholder{color:var(--text-3)}
+#sbar input::-webkit-search-cancel-button,#sbar input::-webkit-search-decoration{-webkit-appearance:none;display:none}
+#sbar .x{width:32px;height:32px;border-radius:16px;display:none;place-items:center;background:var(--card-2)}
+#sbar .x svg{width:14px;height:14px;color:var(--text-2)}
+#sbar.has .x{display:grid}
+.res{display:flex;gap:12px;align-items:center;padding:8px;content-visibility:auto;contain-intrinsic-size:auto 86px}
+.res .cov{width:48px;height:68px;border-radius:9px}
+.res .mid{flex:1;min-width:0}
+.res .t{font-weight:680;font-size:15px;line-height:1.22;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.res .m{font-size:12.5px;color:var(--text-2);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.res .add{width:40px;height:40px;border-radius:20px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);flex:none}
+.res .add svg{width:20px;height:20px}
+.res .add.in{background:var(--card-2);color:var(--good)}
+
+/* ═════════════ SHEETS ═════════════ */
+#sheets{position:fixed;inset:0;z-index:50;pointer-events:none}
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.42);opacity:0;transition:opacity .3s;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;max-height:calc(100% - var(--st) - 24px);display:flex;flex-direction:column;border-radius:28px 28px 0 0;background:var(--sheet);-webkit-backdrop-filter:var(--bf);backdrop-filter:var(--bf);border:1px solid var(--stroke);border-bottom:0;box-shadow:var(--hi),0 -10px 40px rgba(0,0,0,.35);transform:translateY(105%);transition:transform .42s cubic-bezier(.2,.9,.25,1);pointer-events:auto;will-change:transform}
+.sheet.full{height:calc(100% - var(--st) - 24px)}
+.sheet.in{transform:translateY(0)}
+.scrim.in{opacity:1}
+.grab{flex:none;padding:10px 0 4px;display:grid;place-items:center;touch-action:none}
+.grab{position:relative}
+.grab i{width:40px;height:5px;border-radius:3px;background:var(--stroke-2)}
+.sx{position:absolute;right:12px;top:10px;width:34px;height:34px;border-radius:17px;display:grid;place-items:center;background:var(--card-2);border:1px solid var(--stroke);color:var(--text-2);z-index:2}
+.sx svg{width:16px;height:16px}
+.sbody{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px var(--s4) calc(var(--sb) + 24px);overscroll-behavior:contain}
+.sheet h2{margin:6px 2px 14px;font-size:24px;letter-spacing:-.01em}
+.row{display:flex;align-items:center;gap:12px;padding:12px 14px;min-height:54px}
+.row+.row{border-top:1px solid var(--stroke)}
+.row .lbl{flex:1;font-weight:600}
+.row .lbl small{display:block;font-weight:500;color:var(--text-2);font-size:12.5px;margin-top:2px}
+.grp{padding:0;overflow:hidden}
+.grp .row>.cov{width:40px;height:56px;border-radius:8px}
+
+/* detail */
+.hero{position:relative;margin:-4px calc(-1*var(--s4)) 0;padding:6px var(--s4) 16px;display:flex;gap:16px;align-items:flex-end}
+.hero .cov{width:112px;height:160px;border-radius:16px;box-shadow:0 12px 30px rgba(0,0,0,.45)}
+.hero h2{margin:0 0 6px;font-size:22px;line-height:1.15}
+.hero .alt{font-size:13px;color:var(--text-2);line-height:1.3}
+.hero .meta{font-size:12.5px;color:var(--text-3);margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
+.prog{display:flex;align-items:center;gap:14px;padding:14px}
+.prog .ring{width:68px;height:68px}
+.prog .ring b{font-size:16px}
+.prog .mid{flex:1;min-width:0}
+.prog .big{font-size:20px;font-weight:750}
+.prog .rel{font-size:12.5px;color:var(--text-2);margin-top:3px;line-height:1.35}
+.step{display:flex;gap:8px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 4px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;height:38px;padding:0 14px;border-radius:var(--r-pill);background:var(--card);border:1px solid var(--stroke);font-size:14px;font-weight:650;color:var(--text-2)}
+.chip.on{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.segc{display:flex;background:var(--card);border:1px solid var(--stroke);border-radius:var(--r-pill);padding:3px}
+.segc button{flex:1;height:34px;border-radius:var(--r-pill);font-size:14px;font-weight:700;color:var(--text-2);min-width:64px}
+.segc button.on{background:var(--accent);color:var(--accent-ink)}
+.stars{display:flex;gap:4px;touch-action:none}
+.stars .st{position:relative;width:34px;height:34px}
+.stars .st svg{position:absolute;inset:0;width:34px;height:34px}
+.stars .st .bgs{color:var(--stroke-2)}
+.stars .st .fg{position:absolute;inset:0;overflow:hidden;color:#ffc94d;width:0}
+.stars.lg .st,.stars.lg .st svg{width:44px;height:44px}
+.tog{width:52px;height:32px;border-radius:16px;background:var(--stroke-2);position:relative;transition:background .2s;flex:none}
+.tog i{position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:13px;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.3);transition:transform .25s cubic-bezier(.3,1.3,.5,1)}
+.tog.on{background:var(--good)}
+.tog.on i{transform:translateX(20px)}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper b{min-width:34px;text-align:center}
+
+/* inbox */
+.sg{padding:14px}
+.sg .top{display:flex;gap:12px;align-items:center}
+.sg .cov{width:44px;height:62px;border-radius:9px}
+.sg .t{font-weight:700;line-height:1.25}
+.sg .q{font-size:13.5px;color:var(--text-2);margin-top:3px;line-height:1.35}
+.sg .acts{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.sg .acts .btn{flex:1;height:40px;font-size:13.5px;padding:0 8px;min-width:0}
+
+/* themes */
+.tgal{display:flex;gap:12px;overflow-x:auto;margin:0 calc(-1*var(--s4));padding:4px var(--s4) 8px;scrollbar-width:none}
+.tgal::-webkit-scrollbar{display:none}
+.tprev{flex:none;width:118px;text-align:center}
+.tprev .pv{height:150px;border-radius:18px;position:relative;overflow:hidden;border:2px solid transparent;transition:transform .15s}
+.tprev.on .pv{border-color:var(--accent)}
+.tprev:active .pv{transform:scale(.96)}
+.tprev .pv .c1,.tprev .pv .c2{position:absolute;left:10px;right:10px;border-radius:10px;border:1px solid rgba(255,255,255,.14)}
+.tprev .pv .c1{top:14px;height:44px}
+.tprev .pv .c2{top:66px;height:30px}
+.tprev .pv .ac{position:absolute;left:10px;bottom:12px;width:54px;height:22px;border-radius:11px}
+.tprev .pv .rg{position:absolute;right:12px;bottom:10px;width:26px;height:26px;border-radius:50%;border:4px solid}
+.tprev span{display:block;font-size:12.5px;font-weight:650;margin-top:6px;color:var(--text-2)}
+.swatches{display:flex;gap:10px;flex-wrap:wrap}
+.sw{width:36px;height:36px;border-radius:18px;border:3px solid transparent;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
+.sw.on{border-color:var(--text)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:32px;background:transparent}
+input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:var(--stroke-2)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:14px;background:#fff;margin-top:-11px;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.field{width:100%;height:48px;border-radius:var(--r-sm);background:var(--card);border:1px solid var(--stroke);padding:0 14px;font-size:16px;outline:none}
+.field:focus{border-color:var(--accent)}
+
+/* lock */
+#lock{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;padding:var(--s5)}
+#lock.on{display:flex}
+#lock .card{width:100%;max-width:360px;padding:28px 22px;text-align:center}
+#lock img{width:72px;height:72px;border-radius:18px;margin:0 auto 14px}
+#lock h1{margin:0 0 6px;font-size:28px}
+#lock p{margin:0 0 18px;color:var(--text-2)}
+#lock .err{color:var(--bad);font-size:14px;min-height:20px;margin-top:10px}
+
+/* toast */
+#toast{position:fixed;left:50%;top:calc(var(--st) + 10px);transform:translate(-50%,-20px);opacity:0;z-index:90;padding:0 8px 0 18px;height:48px;border-radius:24px;display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;transition:all .3s cubic-bezier(.2,.9,.25,1.1);pointer-events:none;white-space:nowrap;max-width:calc(100% - 32px)}
+#toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+#toast button{height:36px;padding:0 14px;border-radius:18px;background:var(--accent-soft);color:var(--accent);font-weight:750}
+#toast.noact{padding-right:18px}
+.syncdot{display:inline-block;width:8px;height:8px;border-radius:4px;background:var(--good);margin-left:6px;vertical-align:middle;transition:background .3s}
+.syncdot.busy{background:var(--warn);animation:blink 1s infinite}
+.syncdot.off{background:var(--text-3)}
+#updbar{white-space:nowrap;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 92px);z-index:95;height:44px;padding:0 20px;border-radius:22px;background:var(--accent);color:#fff;font-weight:700;font-size:15px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+@keyframes blink{50%{opacity:.35}}
+.progbar{height:8px;border-radius:4px;background:var(--stroke-2);overflow:hidden;margin:14px 0 8px}
+.progbar i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
+.fadein{animation:fi .35s ease both}
+@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div id="bg"></div>
+
+<main id="home" class="screen"></main>
+<main id="library" class="screen lib"></main>
+<main id="search" class="screen srch"></main>
+<main id="settings" class="screen"></main>
+
+<div id="seg" class="chrome"></div>
+<form id="sbar" class="chrome" autocomplete="off" onsubmit="return false">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+  <input id="q" type="search" inputmode="search" enterkeyhint="search" placeholder="Search anime — English or Japanese" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <button type="button" class="x" data-act="clearq" aria-label="Clear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+</form>
+
+<nav id="tabs" class="chrome"></nav>
+<div id="sheets"></div>
+<div id="toast" class="chrome"></div>
+
+<div id="lock">
+  <div class="card">
+    <img src="/apple-touch-icon.png" alt="">
+    <h1>Cour</h1>
+    <p>Enter your passcode once on this device.</p>
+    <input id="pass" class="field" type="password" placeholder="Passcode" autocomplete="current-password" enterkeyhint="go">
+    <button class="btn pri block" style="margin-top:12px" data-act="unlock">Unlock</button>
+    <div class="err" id="lockerr"></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ═══════════════════════ UTIL ═══════════════════════ */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const pad = (n) => String(n).padStart(2, '0');
+const nowMs = () => Date.now();
+const iso = () => new Date().toISOString();
+const today = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+const APP_VERSION = 'cour-3';
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  del(k) { try { localStorage.removeItem(k); } catch {} },
+};
+const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => { const r = (Math.random() * 16) | 0; return (c === 'x' ? r : (r & 3) | 8).toString(16); }));
+const norm = (s) => String(s || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9぀-ヿ一-鿿]+/g, ' ').trim();
+
+function rel(t) { // "in 2d 4h" / "3h ago"
+  const d = new Date(t).getTime() - nowMs(), a = Math.abs(d);
+  const m = Math.round(a / 6e4), h = Math.floor(a / 36e5), dd = Math.floor(a / 864e5);
+  const s = a < 36e5 ? `${Math.max(1, m)}m` : a < 864e5 ? `${h}h` : `${dd}d ${Math.floor((a % 864e5) / 36e5)}h`;
+  return d >= 0 ? `in ${s}` : `${s} ago`;
+}
+function when(t) {
+  const d = new Date(t);
+  return d.toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' });
+}
+function ago(t) {
+  if (!t) return 'never';
+  const days = Math.floor((nowMs() - new Date(t).getTime()) / 864e5);
+  if (days < 1) return 'today';
+  if (days < 2) return 'yesterday';
+  if (days < 14) return `${days} days ago`;
+  if (days < 60) return `${Math.round(days / 7)} weeks ago`;
+  return `${Math.round(days / 30)} months ago`;
+}
+
+/* ═══════════════════════ ICONS ═══════════════════════ */
+const I = {
+  home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M10 8.5v7l5.5-3.5z" fill="currentColor"/></svg>',
+  lib: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="16" rx="2"/><rect x="14" y="4" width="7" height="16" rx="2"/></svg>',
+  search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+  gear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.5"/><circle cx="10" cy="17" r="2.5"/></svg>',
+  play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5z"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  minus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M5 12h14"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',
+  inbox: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13h5l1.5 3h5L16 13h5"/><path d="M5.5 5h13L21 13v6H3v-6z"/></svg>',
+  chev: '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>',
+  star: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4L2.8 9.5l6.4-.8z"/></svg>',
+  sparkle: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 6.1L20 10l-6.1 1.9L12 18l-1.9-6.1L4 10l6.1-1.9zM19 15l.9 2.6 2.6.9-2.6.9L19 22l-.9-2.6-2.6-.9 2.6-.9z"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  upload: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>',
+  download: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>',
+  refresh: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>',
+  lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
+  paint: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="8" cy="10" r="1.3" fill="currentColor"/><circle cx="12" cy="7.5" r="1.3" fill="currentColor"/><circle cx="16" cy="10" r="1.3" fill="currentColor"/><path d="M12 21a3 3 0 0 1 0-6h2"/></svg>',
+  link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>',
+  pc: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>',
+};
+
+/* ═══════════════════════ STATE ═══════════════════════ */
+const STATUS = [['watching', 'Watching'], ['completed', 'Completed'], ['on_hold', 'On Hold'], ['dropped', 'Dropped'], ['plan', 'Plan']];
+const STATUS_NAME = Object.fromEntries(STATUS);
+const S = {
+  shows: new Map(),
+  sugg: [],
+  settings: {},
+  tab: LS.get('cour:tab', 'home'),
+  lib: LS.get('cour:lib', 'watching'),
+  loaded: false,
+  syncing: false,
+};
+const setting = (k, d) => (S.settings[k] === undefined ? d : S.settings[k]);
+const title = (s) => s.title_en || s.title_romaji || s.title_native || 'Untitled';
+const altTitle = (s) => { const t = title(s); return [s.title_romaji, s.title_native].filter((x) => x && x !== t).join(' · '); };
+
+/* ═══════════════════════ LOCAL CACHE ═══════════════════════ */
+let cacheT;
+function saveCache() {
+  clearTimeout(cacheT);
+  cacheT = setTimeout(() => LS.set('cour:cache', { shows: [...S.shows.values()], sugg: S.sugg, settings: S.settings }), 150);
+}
+function loadCache() {
+  const c = LS.get('cour:cache', null);
+  if (!c) return false;
+  S.shows = new Map((c.shows || []).map((s) => [s.anilist_id, s]));
+  S.sugg = c.sugg || [];
+  S.settings = c.settings || {};
+  return true;
+}
+
+/* ═══════════════════════ SERVER ═══════════════════════ */
+const KEY = () => LS.get('cour:key', null);
+async function api(body) {
+  const r = await fetch('/api/db', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-cour-key': KEY() || '' }, body: JSON.stringify(body) });
+  const j = await r.json().catch(() => ({ error: 'Bad response from server (' + r.status + ')' }));
+  if (!r.ok) { const e = new Error(j.error || 'HTTP ' + r.status); e.status = r.status; throw e; }
+  return j;
+}
+
+// Every write goes through an outbox: instant locally, retried until the server has it (works offline at work).
+let outbox = LS.get('cour:outbox', []);
+let flushing = false;
+function queue(op) { outbox.push(op); LS.set('cour:outbox', outbox); flush(); }
+async function flush() {
+  if (flushing || !KEY()) return;
+  flushing = true; syncDot();
+  try {
+    while (outbox.length) {
+      const op = outbox[0];
+      try { await api(op); }
+      catch (e) {
+        if (e.status === 401) { lock(); break; }
+        if (!e.status || e.status >= 500 || e.status === 429) break; // network/server hiccup → retry later
+        console.warn('Dropped write', e.message, op); // 4xx = bad write (e.g. duplicate inbox item) → skip it
+      }
+      outbox.shift(); LS.set('cour:outbox', outbox);
+    }
+  } finally { flushing = false; syncDot(); }
+}
+setInterval(() => outbox.length && flush(), 15000);
+addEventListener('online', flush);
+
+function reapplyOutbox() {
+  for (const op of outbox) {
+    if (op.table === 'shows' && op.method === 'PATCH') {
+      const id = Number(String(op.query).split('eq.')[1]);
+      const s = S.shows.get(id); if (s) Object.assign(s, op.body);
+    } else if (op.table === 'shows' && op.method === 'POST') {
+      for (const r of op.body) S.shows.set(r.anilist_id, Object.assign(S.shows.get(r.anilist_id) || {}, r));
+    } else if (op.table === 'shows' && op.method === 'DELETE') {
+      S.shows.delete(Number(String(op.query).split('eq.')[1]));
+    } else if (op.table === 'suggestions' && op.method === 'PATCH') {
+      const id = String(op.query).split('eq.')[1]; S.sugg = S.sugg.filter((x) => x.id !== id);
+    } else if (op.table === 'suggestions' && op.method === 'POST') {
+      for (const r of op.body) if (!S.sugg.find((x) => x.id === r.id)) S.sugg.push(r);
+    } else if (op.table === 'settings' && op.method === 'POST') {
+      for (const r of op.body) S.settings[r.key] = r.value;
+    }
+  }
+}
+
+function syncDot() {
+  const d = $('#syncdot'); if (!d) return;
+  d.className = 'syncdot' + (flushing || S.syncing ? ' busy' : outbox.length ? ' off' : '');
+}
+
+/* ─── write helpers ─── */
+function patchShow(id, f, opts = {}) {
+  const s = S.shows.get(id); if (!s) return;
+  Object.assign(s, f, { updated_at: iso() });
+  saveCache();
+  queue({ table: 'shows', method: 'PATCH', query: 'anilist_id=eq.' + id, body: f, prefer: 'return=minimal' });
+  if (!opts.silent) render();
+}
+function upsertRows(rows) {
+  if (!rows.length) return;
+  // PostgREST bulk upserts need identical keys per batch → group by key signature
+  const groups = new Map();
+  for (const r of rows) { const sig = Object.keys(r).sort().join(','); (groups.get(sig) || groups.set(sig, []).get(sig)).push(r); }
+  for (const g of groups.values())
+    for (let i = 0; i < g.length; i += 150)
+      queue({ table: 'shows', method: 'POST', body: g.slice(i, i + 150), prefer: 'resolution=merge-duplicates,return=minimal' });
+}
+function putShows(rows) {
+  for (const r of rows) S.shows.set(r.anilist_id, Object.assign(S.shows.get(r.anilist_id) || {}, r));
+  saveCache(); upsertRows(rows);
+}
+function deleteShow(id) {
+  S.shows.delete(id);
+  S.sugg = S.sugg.filter((x) => x.show_id !== id);
+  saveCache();
+  queue({ table: 'shows', method: 'DELETE', query: 'anilist_id=eq.' + id, prefer: 'return=minimal' });
+}
+function setSetting(key, value) {
+  S.settings[key] = value; saveCache();
+  queue({ table: 'settings', method: 'POST', body: [{ key, value }], prefer: 'resolution=merge-duplicates,return=minimal' });
+}
+function addSugg(show_id, kind, payload = {}) {
+  if (S.sugg.some((x) => x.show_id === show_id && x.kind === kind)) return;
+  const row = { id: uuid(), show_id, kind, payload, status: 'pending', source: 'app', created_at: iso() };
+  S.sugg.push(row); saveCache();
+  queue({ table: 'suggestions', method: 'POST', body: [row], prefer: 'return=minimal' });
+}
+function resolveSugg(id, status) {
+  S.sugg = S.sugg.filter((x) => x.id !== id); saveCache();
+  queue({ table: 'suggestions', method: 'PATCH', query: 'id=eq.' + id, body: { status, resolved_at: iso() }, prefer: 'return=minimal' });
+}
+
+/* ═══════════════════════ ANILIST ═══════════════════════ */
+const ANI = 'https://graphql.anilist.co';
+const MF = 'id idMal title{english romaji native} synonyms coverImage{medium large color} format episodes status seasonYear startDate{year month day} nextAiringEpisode{episode airingAt} relations{edges{relationType node{id type}}} externalLinks{site url}';
+async function ani(query, variables, tries = 0) {
+  const r = await fetch(ANI, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ query, variables }) });
+  if (r.status === 429 && tries < 4) { await sleep((+r.headers.get('Retry-After') || 20) * 1000 + 500); return ani(query, variables, tries + 1); }
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || (j.errors && !j.data)) throw new Error((j.errors && j.errors[0] && j.errors[0].message) || 'AniList ' + r.status);
+  return j.data;
+}
+async function aniBatch(field, ids, onProg) {
+  const out = [];
+  for (let i = 0; i < ids.length; i += 50) {
+    const d = await ani(`query($ids:[Int]){Page(perPage:50){media(${field}:$ids,type:ANIME){${MF}}}}`, { ids: ids.slice(i, i + 50) });
+    out.push(...d.Page.media);
+    onProg && onProg(Math.min(i + 50, ids.length), ids.length);
+    if (i + 50 < ids.length) await sleep(900);
+  }
+  return out;
+}
+async function aniSearch(q) {
+  const d = await ani(`query($q:String){Page(perPage:25){media(search:$q,type:ANIME,sort:SEARCH_MATCH,isAdult:false){${MF}}}}`, { q });
+  return d.Page.media;
+}
+function metaFrom(m, cur) {
+  const sd = m.startDate || {};
+  const cr = (m.externalLinks || []).find((l) => /crunchyroll/i.test(l.site));
+  return {
+    anilist_id: m.id,
+    mal_id: m.idMal || null,
+    title_en: m.title.english || null,
+    title_romaji: m.title.romaji || null,
+    title_native: m.title.native || null,
+    synonyms: (m.synonyms || []).slice(0, 8),
+    cover: (m.coverImage && m.coverImage.medium) || null,
+    cover_lg: (m.coverImage && m.coverImage.large) || null,
+    cover_color: (m.coverImage && m.coverImage.color) || null,
+    format: m.format || null,
+    total_eps: m.episodes || null,
+    airing_status: m.status || null,
+    season_year: m.seasonYear || sd.year || null,
+    start_date: sd.year ? `${sd.year}-${pad(sd.month || 1)}-${pad(sd.day || 1)}` : null,
+    relations: ((m.relations && m.relations.edges) || []).filter((e) => e.node.type === 'ANIME' && (e.relationType === 'PREQUEL' || e.relationType === 'SEQUEL')).map((e) => e.node.id),
+    sub_next_ep: (m.nextAiringEpisode && m.nextAiringEpisode.episode) || null,
+    sub_next_at: m.nextAiringEpisode ? new Date(m.nextAiringEpisode.airingAt * 1000).toISOString() : null,
+    cr_url: (cur && cur.cr_url) || (cr ? cr.url : null),
+    meta_updated_at: iso(),
+  };
+}
+const mediaCache = new Map(); // anilist media seen in search/related, for previews
+
+/* ═══════════════════════ RELEASES ═══════════════════════ */
+function subAvail(s) {
+  const st = s.airing_status;
+  if (st === 'RELEASING' || st === 'HIATUS') return s.sub_next_ep ? s.sub_next_ep - 1 : (s.total_eps ?? null);
+  if (st === 'NOT_YET_RELEASED') return 0;
+  return s.total_eps ?? null; // FINISHED / CANCELLED
+}
+const dubActive = (s) => s.dub_next_at && new Date(s.dub_next_at).getTime() > nowMs() - 10 * 864e5;
+function dubAvail(s) {
+  if (s.dub_latest_ep != null) {
+    if (dubActive(s) || s.airing_status !== 'FINISHED') return s.dub_latest_ep;
+    return Math.max(s.dub_latest_ep, s.total_eps || 0);
+  }
+  if (s.airing_status === 'FINISHED' || s.airing_status === 'CANCELLED') return s.total_eps ?? null;
+  if (s.airing_status === 'NOT_YET_RELEASED') return 0;
+  return null; // airing, no dub info
+}
+const avail = (s) => (s.lang === 'sub' ? subAvail(s) : dubAvail(s));
+function nextRel(s) {
+  const ep = s.lang === 'sub' ? s.sub_next_ep : s.dub_next_ep;
+  const at = s.lang === 'sub' ? s.sub_next_at : s.dub_next_at;
+  return at && new Date(at).getTime() > nowMs() ? { ep, at } : null;
+}
+const behind = (s) => { const a = avail(s); return a == null ? 0 : Math.max(0, a - (s.eps_watched || 0)); };
+
+/* ═══════════════════════ FRANCHISES ═══════════════════════ */
+const byStart = (a, b) => (a.start_date || '9999').localeCompare(b.start_date || '9999') || a.anilist_id - b.anilist_id;
+function recomputeFranchises() {
+  const parent = new Map([...S.shows.keys()].map((i) => [i, i]));
+  const find = (x) => { while (parent.get(x) !== x) { parent.set(x, parent.get(parent.get(x))); x = parent.get(x); } return x; };
+  for (const s of S.shows.values())
+    for (const r of s.relations || []) if (parent.has(r)) { const a = find(s.anilist_id), b = find(r); if (a !== b) parent.set(a, b); }
+  const groups = new Map();
+  for (const id of parent.keys()) { const r = find(id); (groups.get(r) || groups.set(r, []).get(r)).push(S.shows.get(id)); }
+  const changes = [];
+  for (const g of groups.values()) {
+    g.sort(byStart);
+    const key = g[0].anilist_id;
+    for (const s of g) if (s.franchise_key !== key) { s.franchise_key = key; changes.push({ anilist_id: s.anilist_id, franchise_key: key }); }
+  }
+  if (changes.length) { saveCache(); upsertRows(changes); }
+}
+const franchise = (s) => [...S.shows.values()].filter((x) => (x.franchise_key ?? x.anilist_id) === (s.franchise_key ?? s.anilist_id)).sort(byStart);
+
+/* ═══════════════════════ THEMES ═══════════════════════ */
+const PRESETS = [
+  { id: 'midnight', name: 'Midnight', accent: '#8b7cff', grad: ['#5b3fd6', '#b23a8a', '#1d2a6b'] },
+  { id: 'sakura', name: 'Sakura', accent: '#ff6fa5', grad: ['#ff6fa5', '#7a3cff', '#ff9e7a'] },
+  { id: 'aurora', name: 'Aurora', accent: '#35e0bd', grad: ['#0fb5a0', '#2d5bd8', '#46c86a'] },
+  { id: 'ember', name: 'Ember', accent: '#ff8a3d', grad: ['#ff5e3a', '#a4133c', '#ffb347'] },
+  { id: 'ocean', name: 'Ocean', accent: '#4aa8ff', grad: ['#1e6bff', '#00b8c9', '#2a2f8f'] },
+  { id: 'mono', name: 'Mono', accent: '#e6e6ee', lightAccent: '#1b1b22', grad: ['#4a4a57', '#1c1c24', '#33333d'] },
+];
+const ACCENTS = ['#8b7cff', '#ff6fa5', '#35e0bd', '#ff8a3d', '#4aa8ff', '#ffd34d', '#ff5a5f', '#9be15d', '#e6e6ee'];
+const FONTS = {
+  system: '-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif',
+  rounded: 'ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif',
+  serif: '"New York",ui-serif,Georgia,serif',
+  mono: 'ui-monospace,"SF Mono",Menlo,monospace',
+};
+const DEFAULT_THEME = { preset: 'midnight', name: 'Midnight', mode: 'dark', accent: null, glass: 70, round: 60, font: 'system', wall: { type: 'gradient', photo: null, dim: 35, blur: 24 }, accentFromWall: false };
+const theme = () => ({ ...DEFAULT_THEME, ...(setting('theme', null) || {}), wall: { ...DEFAULT_THEME.wall, ...((setting('theme', null) || {}).wall || {}) } });
+
+function rgba(hex, a) {
+  const h = hex.replace('#', ''); const n = parseInt(h.length === 3 ? h.split('').map((c) => c + c).join('') : h, 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+}
+function lum(hex) {
+  const n = parseInt(hex.replace('#', ''), 16); const c = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; });
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+}
+const isDark = (t) => t.mode === 'dark' || (t.mode === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+
+function tokensFor(t) {
+  const p = PRESETS.find((x) => x.id === t.preset) || PRESETS[0];
+  const dark = isDark(t);
+  let accent = t.accent || (!dark && p.lightAccent) || p.accent;
+  const g = Math.max(0, Math.min(100, t.glass)), r = t.round;
+  const solid = g <= 5;
+  const T = {};
+  T['--accent'] = accent;
+  T['--accent-ink'] = lum(accent) > 0.55 ? '#111' : '#fff';
+  T['--accent-soft'] = rgba(accent, dark ? 0.2 : 0.16);
+  T['--r-card'] = Math.round(8 + r * 0.2) + 'px';
+  T['--r-btn'] = Math.round(8 + r * 0.14) + 'px';
+  T['--r-sm'] = Math.round(6 + r * 0.1) + 'px';
+  T['--font'] = FONTS[t.font] || FONTS.system;
+  T['--bf'] = solid ? 'none' : `blur(${Math.round(g * 0.32)}px) saturate(${(1 + g * 0.008).toFixed(2)})`;
+  if (dark) {
+    Object.assign(T, {
+      '--base': '#07080f', '--text': '#f4f5fb', '--text-2': 'rgba(244,245,251,.68)', '--text-3': 'rgba(244,245,251,.42)',
+      '--card': solid ? '#171826' : `rgba(255,255,255,${(0.15 - g * 0.0009).toFixed(3)})`,
+      '--card-2': solid ? '#20212f' : 'rgba(255,255,255,.12)',
+      '--chrome': solid ? '#14151f' : `rgba(18,17,32,${(0.86 - g * 0.004).toFixed(3)})`,
+      '--sheet': solid ? '#12131c' : `rgba(18,17,30,${(0.93 - g * 0.0022).toFixed(3)})`,
+      '--stroke': 'rgba(255,255,255,.12)', '--stroke-2': 'rgba(255,255,255,.2)',
+      '--hi': 'inset 0 1px 0 rgba(255,255,255,.16)', '--shadow': '0 10px 30px rgba(0,0,0,.28)', 'color-scheme': 'dark',
+    });
+  } else {
+    Object.assign(T, {
+      '--base': '#eef0f6', '--text': '#11131c', '--text-2': 'rgba(17,19,28,.64)', '--text-3': 'rgba(17,19,28,.4)',
+      '--card': solid ? '#ffffff' : `rgba(255,255,255,${(0.84 - g * 0.003).toFixed(3)})`,
+      '--card-2': solid ? '#f1f2f7' : 'rgba(255,255,255,.72)',
+      '--chrome': solid ? '#ffffff' : `rgba(255,255,255,${(0.92 - g * 0.004).toFixed(3)})`,
+      '--sheet': solid ? '#f7f7fb' : `rgba(248,248,252,${(0.96 - g * 0.0016).toFixed(3)})`,
+      '--stroke': 'rgba(20,20,50,.09)', '--stroke-2': 'rgba(20,20,50,.14)',
+      '--hi': 'inset 0 1px 0 rgba(255,255,255,.8)', '--shadow': '0 8px 24px rgba(30,30,70,.10)', 'color-scheme': 'light',
+    });
+  }
+  const w = t.wall || {};
+  if (w.type === 'photo' && w.photo) {
+    T['--wall'] = `url("${w.photo}")`;
+    T['--wall-filter'] = `blur(${w.blur || 0}px)`;
+    T['--wall-dim'] = String((w.dim ?? 35) / 100);
+  } else if (w.type === 'none') {
+    T['--wall'] = 'linear-gradient(transparent,transparent)'; T['--wall-filter'] = 'none'; T['--wall-dim'] = '0';
+  } else {
+    const [a, b, c] = p.grad, al = dark ? [0.95, 0.8, 0.85] : [0.5, 0.38, 0.42];
+    T['--wall'] = `radial-gradient(120% 80% at 90% 0%,${rgba(a, al[0])} 0%,transparent 55%),radial-gradient(90% 70% at 0% 100%,${rgba(b, al[1])} 0%,transparent 60%),radial-gradient(80% 60% at 15% 25%,${rgba(c, al[2])} 0%,transparent 70%)`;
+    T['--wall-filter'] = 'none'; T['--wall-dim'] = '0';
+  }
+  return T;
+}
+function applyTheme(t = theme()) {
+  const T = tokensFor(t), root = document.documentElement;
+  for (const k in T) k === 'color-scheme' ? (root.style.colorScheme = T[k]) : root.style.setProperty(k, T[k]);
+  const light = { ...T }; if (t.wall && t.wall.type === 'photo') delete light['--wall']; // photo is too big for the boot cache
+  LS.set('cour:themecss', light);
+  $('meta[name=theme-color]').setAttribute('content', T['--base']);
+}
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => theme().mode === 'auto' && applyTheme());
+
+async function photoToData(file) {
+  const url = URL.createObjectURL(file);
+  const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
+  const max = 1170, sc = Math.min(1, max / Math.max(img.width, img.height));
+  const c = document.createElement('canvas'); c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc);
+  c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+  URL.revokeObjectURL(url);
+  // accent pick: average of the most saturated pixels
+  const sm = document.createElement('canvas'); sm.width = sm.height = 48; const x = sm.getContext('2d'); x.drawImage(img, 0, 0, 48, 48);
+  const d = x.getImageData(0, 0, 48, 48).data; const px = [];
+  for (let i = 0; i < d.length; i += 4) { const r = d[i], g = d[i + 1], b = d[i + 2], mx = Math.max(r, g, b), mn = Math.min(r, g, b); const sat = mx ? (mx - mn) / mx : 0; if (mx > 70 && mx < 250) px.push([sat, r, g, b]); }
+  px.sort((a, b) => b[0] - a[0]); const top = px.slice(0, Math.max(8, px.length / 10 | 0));
+  const avg = top.reduce((a, p) => [a[0] + p[1], a[1] + p[2], a[2] + p[3]], [0, 0, 0]).map((v) => Math.round(v / (top.length || 1)));
+  const hex = '#' + avg.map((v) => v.toString(16).padStart(2, '0')).join('');
+  return { data: c.toDataURL('image/jpeg', 0.72), accent: top.length ? hex : null };
+}
+
+/* ═══════════════════════ SHARED BITS ═══════════════════════ */
+function ring(w, tot, big) {
+  const r = 22, C = 2 * Math.PI * r, pct = tot ? Math.min(1, w / tot) : 0;
+  return `<div class="ring"><svg viewBox="0 0 52 52"><circle class="trk" cx="26" cy="26" r="${r}" fill="none" stroke-width="${big ? 4.5 : 5}"/><circle class="val" cx="26" cy="26" r="${r}" fill="none" stroke-width="${big ? 4.5 : 5}" stroke-linecap="round" stroke-dasharray="${C.toFixed(2)}" stroke-dashoffset="${(C * (1 - pct)).toFixed(2)}"/></svg><b>${w}</b></div>`;
+}
+function setRing(el, w, tot) {
+  if (!el) return; const r = 22, C = 2 * Math.PI * r, pct = tot ? Math.min(1, w / tot) : 0;
+  const v = el.querySelector('.val'); if (v) v.style.strokeDashoffset = (C * (1 - pct)).toFixed(2);
+  const b = el.querySelector('b'); if (b) b.textContent = w;
+}
+const cov = (s, cls = 'cov', big) => `<img class="${cls}" loading="lazy" decoding="async" alt="" src="${esc((big && s.cover_lg) || s.cover || '')}" style="background:${esc(s.cover_color || 'var(--card-2)')}">`;
+function stars(v, act, id, lg) {
+  let h = `<div class="stars${lg ? ' lg' : ''}" data-v="${v || 0}">`;
+  for (let i = 1; i <= 5; i++) {
+    const fill = Math.max(0, Math.min(100, ((v || 0) - (i - 1)) * 100));
+    h += `<button class="st" data-act="${act}" data-id="${id}" data-i="${i}" aria-label="${i} stars"><svg class="bgs" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4L2.8 9.5l6.4-.8z"/></svg><span class="fg" style="width:${fill}%">${I.star}</span></button>`;
+  }
+  return h + '</div>';
+}
+function starVal(el, e) {
+  const r = el.getBoundingClientRect(), i = Number(el.dataset.i);
+  return e.clientX - r.left < r.width / 2 ? i - 0.5 : i;
+}
+const watchUrl = (s) => s.cr_url || `https://www.crunchyroll.com/search?q=${encodeURIComponent(s.title_en || s.title_romaji || '')}`;
+const fmtName = (f) => ({ TV: 'TV', TV_SHORT: 'TV Short', MOVIE: 'Movie', OVA: 'OVA', ONA: 'ONA', SPECIAL: 'Special', MUSIC: 'Music' }[f] || f || '');
+function seasonLabel(s, fam) {
+  if (s.format && s.format !== 'TV' && s.format !== 'TV_SHORT') return fmtName(s.format);
+  const tv = fam.filter((x) => !x.format || x.format === 'TV' || x.format === 'TV_SHORT');
+  return 'Season ' + (tv.indexOf(s) + 1);
+}
+function relLine(s) {
+  const a = avail(s), n = nextRel(s), L = s.lang === 'sub' ? 'Sub' : 'Dub';
+  let t = a == null ? (s.lang === 'dub' ? 'Dub release info not found yet' : 'Release info unknown') : a === 0 ? `${L} not out yet` : `${L} · ep ${a} out`;
+  if (n) t += ` · ep ${n.ep} ${rel(n.at)}`;
+  return t;
+}
+
+/* ═══════════════════════ TABS / RENDER LOOP ═══════════════════════ */
+const TABS = [['home', 'Up Next', I.home], ['library', 'Library', I.lib], ['search', 'Search', I.search], ['settings', 'Settings', I.gear]];
+const dirty = new Set();
+function renderTabs() {
+  $('#tabs').innerHTML = TABS.map(([id, l, ic]) => `<button data-act="tab" data-tab="${id}" class="${S.tab === id ? 'on' : ''}" aria-label="${l}">${ic}<span>${l}</span>${id === 'home' ? '<i class="dot" id="tabdot"></i>' : ''}</button>`).join('');
+  tabDot();
+}
+function tabDot() { const d = $('#tabdot'); if (!d) return; const n = S.sugg.length; d.textContent = n; d.style.display = n ? 'block' : 'none'; }
+const RENDER = { home: () => renderHome(), library: () => renderLibrary(), search: () => renderSearch(), settings: () => renderSettings() };
+function render() {
+  TABS.forEach(([id]) => dirty.add(id));
+  RENDER[S.tab](); dirty.delete(S.tab);
+  tabDot(); refreshSheets(); syncDot();
+}
+function setTab(id, opts = {}) {
+  S.tab = id; LS.set('cour:tab', id);
+  $$('.screen').forEach((el) => el.classList.toggle('on', el.id === id));
+  $$('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === id));
+  $('#seg').classList.toggle('on', id === 'library');
+  $('#sbar').classList.toggle('on', id === 'search');
+  if (dirty.has(id) || !$('#' + id).innerHTML) { RENDER[id](); dirty.delete(id); }
+  if (id === 'library') requestAnimationFrame(placeKnob);
+  if (id === 'search' && !opts.nofocus) $('#q').focus();
+  else $('#q').blur();
+}
+
+/* ═══════════════════════ HOME ═══════════════════════ */
+function renderHome() {
+  const el = $('#home');
+  const d = new Date().toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
+  let h = `<div class="hdr"><div><h1>Up Next</h1><div class="sub">${d}<span id="syncdot" class="syncdot"></span></div></div></div>`;
+  if (!S.shows.size) {
+    h += `<div class="card empty fadein"><div class="big">${I.sparkle}</div><h2>Welcome to Cour</h2><p>Bring your MyAnimeList over as-is, or search for something to watch.</p>
+      <div class="stack" style="margin-top:22px"><button class="btn pri block" data-act="import">${I.upload} Import my MAL list</button><button class="btn block" data-act="tab" data-tab="search">${I.search} Search anime</button></div></div>`;
+    el.innerHTML = h; return;
+  }
+  const w = [...S.shows.values()].filter((s) => s.status === 'watching');
+  const up = w.filter((s) => behind(s) > 0).sort((a, b) => new Date(b.last_watched_at || 0) - new Date(a.last_watched_at || 0));
+  const soon = w.map((s) => ({ s, n: nextRel(s) })).filter((x) => x.n && new Date(x.n.at) - nowMs() < 8 * 864e5).sort((a, b) => new Date(a.n.at) - new Date(b.n.at));
+  const n = S.sugg.length;
+  h += '<div class="stack">';
+  if (n) h += `<button class="card inboxcard fadein" data-act="inbox" style="width:100%;text-align:left"><div class="ic">${I.inbox}</div><div><b>Suggestions</b><div class="muted" style="font-size:13px;margin-top:2px">Review what Cour noticed</div></div><div class="cnt">${n}</div></button>`;
+  if (up.length) h += up.map(nxCard).join('');
+  else h += `<div class="card empty fadein"><div class="big">${I.check}</div><h2>All caught up</h2><p>${soon.length ? `Next up: <b>${esc(title(soon[0].s))}</b> ep ${soon[0].n.ep} ${rel(soon[0].n.at)}` : w.length ? 'Nothing new right now. Go touch grass.' : 'Nothing marked Watching yet — find something in Search.'}</p></div>`;
+  h += '</div>';
+  if (soon.length) {
+    h += `<div class="sec">Coming up</div><div class="soon">` + soon.map(({ s, n }) => `<button class="card" data-act="open" data-id="${s.anilist_id}">${cov(s)}<div style="min-width:0;text-align:left"><div class="t">${esc(title(s))}</div><div class="m">Ep ${n.ep} · ${when(n.at)}</div></div></button>`).join('') + '</div>';
+  }
+  el.innerHTML = h;
+}
+function nxCard(s) {
+  const a = avail(s), tot = s.total_eps || a || 0, w = s.eps_watched || 0, b = behind(s);
+  return `<div class="card nx fadein" data-id="${s.anilist_id}">
+    <div data-act="open" data-id="${s.anilist_id}">${cov(s)}</div>
+    <div class="mid">
+      <div data-act="open" data-id="${s.anilist_id}"><div class="t">${esc(title(s))}</div>
+      <div class="m">Ep ${w + 1}${tot ? ` of ${tot}` : ''} · ${s.lang === 'sub' ? 'Sub' : 'Dub'}${b > 1 ? ` &nbsp;<span class="pill">${b} new</span>` : ''}</div></div>
+      <div class="acts"><button class="btn pri" data-act="plus1" data-id="${s.anilist_id}">${I.check} Watched it</button><a class="btn" href="${esc(watchUrl(s))}" target="_blank" rel="noopener">${I.play} Watch</a></div>
+    </div>
+    ${ring(w, tot)}
+  </div>`;
+}
+function plus1(id) {
+  const s = S.shows.get(id); if (!s) return;
+  const w = (s.eps_watched || 0) + 1;
+  if (s.total_eps && w > s.total_eps) return toast('Already at the last episode');
+  const prev = { eps_watched: s.eps_watched || 0, last_watched_at: s.last_watched_at, started_at: s.started_at };
+  const card = $(`.nx[data-id="${id}"]`);
+  patchShow(id, { eps_watched: w, last_watched_at: iso(), ...(s.started_at ? {} : { started_at: today() }) }, { silent: true });
+  S.sugg.filter((x) => x.show_id === id && x.kind === 'stale').forEach((x) => resolveSugg(x.id, 'accepted'));
+  if (navigator.vibrate) navigator.vibrate(10);
+  if (card) setRing(card.querySelector('.ring'), w, s.total_eps || avail(s) || 0);
+  toast(`Ep ${w} watched`, 'Undo', () => patchShow(id, prev));
+  const done = s.total_eps && w >= s.total_eps && s.airing_status !== 'RELEASING';
+  if (done) setTimeout(() => finishSheet(id), 700);
+  if (card && behind(s) === 0) setTimeout(() => { card.classList.add('gone'); setTimeout(render, 480); }, 800);
+  else setTimeout(render, 900);
+  refreshSheets();
+}
+
+/* ═══════════════════════ LIBRARY ═══════════════════════ */
+const LIB_SORT = {
+  watching: (a, b) => new Date(b.last_watched_at || 0) - new Date(a.last_watched_at || 0),
+  on_hold: (a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0),
+  plan: (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0),
+  completed: (a, b) => title(a).localeCompare(title(b)),
+  dropped: (a, b) => title(a).localeCompare(title(b)),
+};
+function renderLibrary() {
+  const st = S.lib, all = [...S.shows.values()];
+  const inTab = all.filter((s) => s.status === st);
+  const groups = new Map();
+  for (const s of inTab) { const k = s.franchise_key ?? s.anilist_id; (groups.get(k) || groups.set(k, []).get(k)).push(s); }
+  const arr = [...groups.values()].map((g) => g.sort(byStart));
+  const sortFn = LIB_SORT[st];
+  arr.sort((a, b) => sortFn(st === 'completed' || st === 'dropped' ? franchise(a[0])[0] : a[a.length - 1], st === 'completed' || st === 'dropped' ? franchise(b[0])[0] : b[b.length - 1]));
+  let h = `<div class="hdr"><div><h1>Library</h1><div class="sub">${arr.length} ${arr.length === 1 ? 'title' : 'titles'} in ${STATUS_NAME[st]} · ${all.length} total</div></div></div>`;
+  if (!arr.length) h += `<div class="card empty fadein"><div class="big">${I.lib}</div><h2>Nothing here</h2><p>${st === 'plan' ? 'Add shows from Search to plan them.' : 'Shows you mark ' + STATUS_NAME[st] + ' show up here.'}</p></div>`;
+  else h += '<div class="stack">' + arr.map((g) => frCard(g, st)).join('') + '</div>';
+  $('#library').innerHTML = h;
+  renderSeg();
+}
+function frCard(g, st) {
+  const fam = franchise(g[0]);
+  if (fam.length === 1) {
+    const s = g[0], tot = s.total_eps, w = s.eps_watched || 0;
+    const meta = [fmtName(s.format), s.season_year, tot ? `${w}/${tot} eps` : `${w} eps`].filter(Boolean).join(' · ');
+    return `<button class="card fr" data-act="open" data-id="${s.anilist_id}" style="width:100%;text-align:left">${cov(s)}<div class="mid"><div class="t">${esc(title(s))}</div>
+      <div class="m"><span>${meta}</span>${s.rating ? `<span style="color:#ffc94d">★ ${s.rating}</span>` : ''}${s.lang === 'sub' ? '<span class="pill n">SUB</span>' : ''}</div>
+      ${st === 'watching' && tot ? `<div class="bar"><i style="width:${Math.min(100, (w / tot) * 100)}%"></i></div>` : ''}</div>${I.chev}</button>`;
+  }
+  const root = fam[0], cur = g[g.length - 1];
+  const rated = fam.filter((x) => x.rating); const avg = rated.length ? (rated.reduce((a, x) => a + Number(x.rating), 0) / rated.length) : 0;
+  const note = st === 'watching' ? `${seasonLabel(cur, fam)} · ep ${cur.eps_watched || 0}${cur.total_eps ? '/' + cur.total_eps : ''}` : `${g.length} of ${fam.length} ${STATUS_NAME[st].toLowerCase()}`;
+  return `<button class="card fr" data-act="openfr" data-id="${root.anilist_id}" style="width:100%;text-align:left">
+    <div class="stack-cov">${cov(fam.find((x) => x !== cur) || root, '')}${cov(cur, '')}</div>
+    <div class="mid"><div class="t">${esc(title(root))}</div><div class="m"><span>${fam.length} parts</span><span>${note}</span>${avg ? `<span style="color:#ffc94d">★ ${(Math.round(avg * 2) / 2).toFixed(1).replace('.0', '')}</span>` : ''}</div>
+    ${st === 'watching' && cur.total_eps ? `<div class="bar"><i style="width:${Math.min(100, ((cur.eps_watched || 0) / cur.total_eps) * 100)}%"></i></div>` : ''}</div>${I.chev}</button>`;
+}
+function renderSeg() {
+  const counts = {}; for (const s of S.shows.values()) counts[s.status] = (counts[s.status] || 0) + 1;
+  $('#seg').innerHTML = '<i class="knob"></i>' + STATUS.map(([k, l]) => `<button data-act="lib" data-st="${k}" class="${S.lib === k ? 'on' : ''}">${l}<small>${counts[k] || 0}</small></button>`).join('');
+  requestAnimationFrame(placeKnob);
+}
+function placeKnob() {
+  const seg = $('#seg'), b = seg.querySelector('button.on'), k = seg.querySelector('.knob');
+  if (!b || !k || !b.offsetWidth) return;
+  k.style.width = b.offsetWidth + 'px'; k.style.transform = `translateX(${b.offsetLeft - 4}px)`; k.style.left = '4px';
+}
+function setLib(st) {
+  if (S.lib === st) return;
+  S.lib = st; LS.set('cour:lib', st);
+  $$('#seg button').forEach((b) => b.classList.toggle('on', b.dataset.st === st)); placeKnob();
+  const el = $('#library'); renderLibrary(); el.scrollTop = 0;
+}
+(() => { // drag across the switcher to slide between statuses
+  let down = false; const seg = $('#seg');
+  seg.addEventListener('pointerdown', () => { down = true; });
+  addEventListener('pointerup', () => { down = false; }); addEventListener('pointercancel', () => { down = false; });
+  seg.addEventListener('pointermove', (e) => {
+    if (!down) return;
+    const b = document.elementFromPoint(e.clientX, e.clientY); const btn = b && b.closest && b.closest('#seg button');
+    if (btn && btn.dataset.st !== S.lib) { setLib(btn.dataset.st); if (navigator.vibrate) navigator.vibrate(5); }
+  });
+})();
+addEventListener('resize', () => requestAnimationFrame(placeKnob));
+
+function openFranchise(rootId) {
+  const root = S.shows.get(rootId); if (!root) return;
+  const o = openSheet('', { kind: 'fr' });
+  o.render = () => {
+    const fam = franchise(S.shows.get(rootId) || root);
+    if (!fam.length) return closeSheet(o);
+    return `<h2>${esc(title(fam[0]))}</h2><div class="card grp">` + fam.map((s) => `<button class="row" data-act="open" data-id="${s.anilist_id}" style="width:100%;text-align:left">${cov(s, 'cov')}<div class="lbl">${esc(seasonLabel(s, fam))} <small>${esc(title(s))}</small><small>${STATUS_NAME[s.status]} · ${s.eps_watched || 0}${s.total_eps ? '/' + s.total_eps : ''} eps${s.rating ? ' · ★ ' + s.rating : ''}</small></div>${I.chev}</button>`).join('') + '</div>';
+  };
+  refreshSheet(o);
+}
+
+/* ═══════════════════════ SEARCH ═══════════════════════ */
+let sq = '', sres = [], stimer, sseq = 0, sLoading = false, sErr = '';
+function onQ() {
+  sq = $('#q').value; $('#sbar').classList.toggle('has', !!sq);
+  clearTimeout(stimer);
+  if (!sq.trim()) { sseq++; sres = []; sLoading = false; renderSearch(); return; }
+  sLoading = true; renderSearch();
+  stimer = setTimeout(runSearch, 300);
+}
+async function runSearch() {
+  const my = ++sseq;
+  try { const r = await aniSearch(sq.trim()); if (my !== sseq) return; r.forEach((m) => mediaCache.set(m.id, m)); sres = r; sErr = ''; }
+  catch (e) { if (my === sseq) sErr = e.message; }
+  finally { if (my === sseq) { sLoading = false; renderSearch(); } }
+}
+function localMatches(q) {
+  const n = norm(q); if (!n) return [];
+  return [...S.shows.values()].filter((s) => [s.title_en, s.title_romaji, s.title_native, ...(s.synonyms || [])].some((t) => norm(t).includes(n))).slice(0, 6);
+}
+function resRow(m) {
+  const s = S.shows.get(m.id) || null;
+  const t = m.title ? (m.title.english || m.title.romaji || m.title.native) : title(m);
+  const alt = m.title ? [m.title.romaji, m.title.native].filter((x) => x && x !== t)[0] : altTitle(m).split(' · ')[0];
+  const meta = [fmtName(m.format), m.seasonYear || m.season_year, (m.episodes || m.total_eps) ? `${m.episodes || m.total_eps} eps` : '', (m.status || m.airing_status) === 'RELEASING' ? 'Airing' : ''].filter(Boolean).join(' · ');
+  const img = m.coverImage ? m.coverImage.medium : m.cover, col = m.coverImage ? m.coverImage.color : m.cover_color;
+  return `<div class="card res"><img class="cov" loading="lazy" decoding="async" alt="" src="${esc(img || '')}" style="background:${esc(col || 'var(--card-2)')}" data-act="preview" data-id="${m.id || m.anilist_id}">
+    <div class="mid" data-act="preview" data-id="${m.id || m.anilist_id}"><div class="t">${esc(t)}</div>${alt ? `<div class="m">${esc(alt)}</div>` : ''}<div class="m">${esc(meta)}</div></div>
+    ${s ? `<button class="add in" data-act="preview" data-id="${s.anilist_id}" aria-label="In library">${I.check}</button>` : `<button class="add" data-act="quickadd" data-id="${m.id}" aria-label="Add to Plan to Watch">${I.plus}</button>`}</div>`;
+}
+function renderSearch() {
+  const el = $('#search');
+  let h = `<div class="hdr"><div><h1>Search</h1><div class="sub">English, romaji or Japanese titles</div></div></div>`;
+  const q = sq.trim();
+  if (!q) {
+    const recent = [...S.shows.values()].filter((s) => s.status === 'plan').sort(LIB_SORT.plan).slice(0, 5);
+    h += `<div class="card" style="padding:16px"><div class="muted" style="font-size:14px;line-height:1.5">Try <b>Frieren</b>, <b>Mushoku Tensei</b>, or <b>葬送のフリーレン</b>. Tap <b>+</b> to drop a show in Plan to Watch.</div></div>`;
+    if (recent.length) h += `<div class="sec">Recently planned</div><div class="stack">${recent.map(resRow).join('')}</div>`;
+  } else {
+    const mine = localMatches(q), mineIds = new Set(mine.map((s) => s.anilist_id));
+    if (mine.length) h += `<div class="sec">In your library</div><div class="stack">${mine.map(resRow).join('')}</div>`;
+    const rest = sres.filter((m) => !mineIds.has(m.id));
+    h += `<div class="sec">AniList</div>`;
+    if (sErr) h += `<div class="card" style="padding:16px;color:var(--bad)">Search failed: ${esc(sErr)}</div>`;
+    else if (sLoading && !rest.length) h += `<div class="card" style="padding:16px" class="muted">Searching…</div>`;
+    else if (!rest.length) h += `<div class="card" style="padding:16px"><span class="muted">No results.</span></div>`;
+    else h += `<div class="stack">${rest.map(resRow).join('')}</div>`;
+  }
+  el.innerHTML = h;
+}
+
+/* ═══════════════════════ SHEETS ═══════════════════════ */
+const sheets = [];
+function openSheet(html, opts = {}) {
+  const root = $('#sheets');
+  const scrim = document.createElement('div'); scrim.className = 'scrim';
+  const sh = document.createElement('div'); sh.className = 'sheet' + (opts.full ? ' full' : '');
+  sh.innerHTML = `<div class="grab"><i></i>${opts.full ? `<button class="sx" data-act="closesheet" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M7 7l10 10M17 7 7 17"/></svg></button>` : ''}</div><div class="sbody">${html}</div>`;
+  root.append(scrim, sh);
+  const o = { sh, scrim, ...opts };
+  sheets.push(o);
+  scrim.addEventListener('click', () => closeSheet(o));
+  requestAnimationFrame(() => requestAnimationFrame(() => { sh.classList.add('in'); scrim.classList.add('in'); }));
+  dragToClose(o);
+  return o;
+}
+function closeSheet(o = sheets[sheets.length - 1]) {
+  const i = sheets.indexOf(o); if (i < 0) return;
+  sheets.splice(i, 1);
+  o.sh.style.transition = ''; o.sh.style.transform = '';
+  o.sh.classList.remove('in'); o.scrim.classList.remove('in');
+  setTimeout(() => { o.sh.remove(); o.scrim.remove(); }, 430);
+  if (o.onClose) o.onClose();
+}
+function refreshSheet(o) {
+  if (!o.render) return;
+  const html = o.render(); if (html === undefined) return;
+  const body = o.sh.querySelector('.sbody'), st = body.scrollTop;
+  body.innerHTML = html; body.scrollTop = st;
+}
+function refreshSheets() { sheets.forEach(refreshSheet); }
+function dragToClose(o) {
+  const sh = o.sh, body = sh.querySelector('.sbody');
+  let y0 = null, x0 = 0, dy = 0, active = false, ok = false;
+  sh.addEventListener('touchstart', (e) => {
+    const t = e.target;
+    if (t.closest('input[type=range],.chips,.tgal,.stars')) { y0 = null; return; }
+    y0 = e.touches[0].clientY; x0 = e.touches[0].clientX; dy = 0; active = false;
+    ok = !!t.closest('.grab') || body.scrollTop <= 0;
+  }, { passive: true });
+  sh.addEventListener('touchmove', (e) => {
+    if (y0 == null || !ok) return;
+    const y = e.touches[0].clientY, x = e.touches[0].clientX; dy = y - y0;
+    if (!active) { if (dy > 8 && Math.abs(dy) > Math.abs(x - x0)) { active = true; sh.style.transition = 'none'; } else if (dy < -4 || Math.abs(x - x0) > 10) { y0 = null; return; } else return; }
+    e.preventDefault();
+    sh.style.transform = `translateY(${Math.max(0, dy)}px)`;
+  }, { passive: false });
+  sh.addEventListener('touchend', () => {
+    if (!active) { y0 = null; return; }
+    sh.style.transition = '';
+    if (dy > 110) closeSheet(o); else sh.style.transform = '';
+    y0 = null; active = false;
+  });
+}
+
+/* ═══════════════════════ SHOW DETAIL ═══════════════════════ */
+function openDetail(id) {
+  const o = openSheet('', { full: true, kind: 'detail', id });
+  o.render = () => detailHTML(id, o);
+  refreshSheet(o);
+  loadRelated(id, o);
+  return o;
+}
+function mediaView(id) { // library row, or AniList media shaped like one
+  const s = S.shows.get(id); if (s) return { s, inLib: true };
+  const m = mediaCache.get(id); if (!m) return null;
+  return { s: { ...metaFrom(m), status: null, eps_watched: 0, lang: setting('default_lang', 'dub') }, inLib: false };
+}
+function detailHTML(id, o) {
+  const v = mediaView(id); if (!v) return '<p class="muted">Loading…</p>';
+  const { s, inLib } = v;
+  const tot = s.total_eps, w = s.eps_watched || 0;
+  const air = { RELEASING: 'Airing', FINISHED: 'Finished', NOT_YET_RELEASED: 'Upcoming', HIATUS: 'Hiatus', CANCELLED: 'Cancelled' }[s.airing_status] || '';
+  let h = `<div class="hero">${cov(s, 'cov', true)}<div style="min-width:0"><h2>${esc(title(s))}</h2><div class="alt">${esc(altTitle(s))}</div>
+    <div class="meta">${[fmtName(s.format), s.season_year, tot ? tot + ' eps' : ''].filter(Boolean).map((x) => `<span class="pill n">${esc(x)}</span>`).join('')}${air ? `<span class="pill${air === 'Airing' ? '' : ' n'}">${air}</span>` : ''}</div></div></div>`;
+  h += `<a class="btn pri block" href="${esc(watchUrl(s))}" target="_blank" rel="noopener">${I.play} Watch on Crunchyroll</a>`;
+  if (!inLib) {
+    h += `<div class="stack" style="margin-top:12px"><button class="btn block" data-act="add" data-id="${id}" data-st="watching">${I.plus} Start watching</button>
+      <div style="display:flex;gap:10px"><button class="btn" style="flex:1" data-act="add" data-id="${id}" data-st="plan">Plan to Watch</button><button class="btn" style="flex:1" data-act="add" data-id="${id}" data-st="completed">Already seen</button></div></div>`;
+    h += relatedHTML(s, o);
+    return h;
+  }
+  h += `<div class="card prog" style="margin-top:14px">${ring(w, tot || avail(s) || 0, true)}<div class="mid"><div class="big">Ep ${w}${tot ? ` <span class="faint" style="font-weight:600">/ ${tot}</span>` : ''}</div><div class="rel">${esc(relLine(s))}</div></div>
+    <div class="step"><button class="iconbtn" data-act="minus1" data-id="${id}" aria-label="Minus one">${I.minus}</button><button class="iconbtn" style="background:var(--accent);color:var(--accent-ink);border-color:transparent" data-act="plus1" data-id="${id}" aria-label="Plus one">${I.plus}</button></div></div>`;
+  h += `<div class="sec">Status</div><div class="chips">${STATUS.map(([k, l]) => `<button class="chip${s.status === k ? ' on' : ''}" data-act="status" data-id="${id}" data-st="${k}">${k === 'plan' ? 'Plan to Watch' : l}</button>`).join('')}</div>`;
+  h += `<div class="sec">Rating</div><div style="display:flex;align-items:center;gap:12px">${stars(s.rating, 'rate', id)}<span class="muted" style="font-weight:700">${s.rating ? s.rating + ' / 5' : 'Not rated'}</span></div>`;
+  h += `<div class="sec">Preferences</div><div class="card grp">
+    <div class="row"><div class="lbl">Language<small>Up Next follows this</small></div><div class="segc"><button class="${s.lang === 'sub' ? 'on' : ''}" data-act="lang" data-id="${id}" data-v="sub">Sub</button><button class="${s.lang === 'dub' ? 'on' : ''}" data-act="lang" data-id="${id}" data-v="dub">Dub</button></div></div>
+    <button class="row" style="width:100%;text-align:left" data-act="nag" data-id="${id}"><div class="lbl">Never nag<small>Don't ask about this one when it sits idle</small></div><div class="tog${s.never_nag ? ' on' : ''}"><i></i></div></button>
+    ${s.status === 'dropped' || s.cr_cleanup ? `<button class="row" style="width:100%;text-align:left" data-act="crrow" data-id="${id}"><div class="lbl">Crunchyroll history<small>${crLine(s)}</small></div>${I.chev}</button>` : ''}
+    <button class="row" style="width:100%;text-align:left" data-act="editlink" data-id="${id}"><div class="lbl">Crunchyroll link<small>${s.cr_url ? esc(s.cr_url.replace(/^https?:\/\/(www\.)?/, '')) : 'Not set — Watch opens a search'}</small></div>${I.chev}</button>
+  </div>`;
+  if (s.last_watched_at) h += `<p class="faint" style="font-size:12.5px;margin:10px 4px 0">Last watched ${ago(s.last_watched_at)}</p>`;
+  h += relatedHTML(s, o);
+  h += `<div style="margin-top:28px"><button class="btn ghost danger block" data-act="remove" data-id="${id}">${o && o.confirmRemove ? 'Tap again to remove' : 'Remove from library'}</button></div>`;
+  return h;
+}
+function relatedHTML(s, o) {
+  const fam = S.shows.has(s.anilist_id) ? franchise(s) : [];
+  const famIds = new Set(fam.map((x) => x.anilist_id));
+  const missing = (s.relations || []).filter((r) => !famIds.has(r) && !S.shows.has(r) && mediaCache.has(r)).map((r) => mediaCache.get(r));
+  if (fam.length <= 1 && !missing.length) return '';
+  let h = `<div class="sec">Seasons & related</div><div class="card grp">`;
+  if (fam.length > 1) h += fam.map((x) => `<button class="row" style="width:100%;text-align:left${x.anilist_id === s.anilist_id ? ';background:var(--accent-soft)' : ''}" data-act="open" data-id="${x.anilist_id}"><div class="lbl">${esc(seasonLabel(x, fam))}<small>${STATUS_NAME[x.status]} · ${x.eps_watched || 0}${x.total_eps ? '/' + x.total_eps : ''} eps${x.rating ? ' · ★ ' + x.rating : ''}</small></div>${I.chev}</button>`).join('');
+  h += missing.map((m) => `<button class="row" style="width:100%;text-align:left" data-act="preview" data-id="${m.id}"><div class="lbl">${esc(m.title.english || m.title.romaji)}<small>${esc([fmtName(m.format), m.seasonYear, 'Not in your library'].filter(Boolean).join(' · '))}</small></div><span class="pill">${I.plus.replace('<svg', '<svg width="14" height="14"')} Add</span></button>`).join('');
+  return h + '</div>';
+}
+async function loadRelated(id, o) {
+  const v = mediaView(id); if (!v) return;
+  const need = (v.s.relations || []).filter((r) => !S.shows.has(r) && !mediaCache.has(r));
+  if (!need.length) return;
+  try { (await aniBatch('id_in', need)).forEach((m) => mediaCache.set(m.id, m)); if (sheets.includes(o)) refreshSheet(o); } catch {}
+}
+function openAny(id) {
+  if (S.shows.has(id) || mediaCache.has(id)) return openDetail(id);
+  ani(`query($id:Int){Media(id:$id,type:ANIME){${MF}}}`, { id }).then((d) => { mediaCache.set(id, d.Media); openDetail(id); }).catch((e) => toast(e.message));
+}
+function addShow(id, status) {
+  const m = mediaCache.get(id); if (!m || S.shows.has(id)) return;
+  const row = newRow(m, status);
+  putShows([row]); recomputeFranchises(); render();
+  toast(`Added to ${status === 'plan' ? 'Plan to Watch' : STATUS_NAME[status]}`);
+  if (status === 'completed') setTimeout(() => finishSheet(id, true), 350);
+  if (status === 'watching' && S.shows.get(id).lang === 'dub') refreshDub(true).catch(() => {}); else lookupSched([id]);
+}
+function newRow(m, status) {
+  const meta = metaFrom(m);
+  return {
+    ...meta, status,
+    eps_watched: status === 'completed' ? (meta.total_eps || 0) : 0,
+    rating: null, lang: setting('default_lang', 'dub'), never_nag: false,
+    last_watched_at: status === 'watching' ? iso() : null,
+    started_at: status === 'watching' ? today() : null,
+    completed_at: status === 'completed' ? today() : null,
+  };
+}
+function setStatus(id, st) {
+  const s = S.shows.get(id); if (!s || s.status === st) return;
+  const f = { status: st };
+  if (st === 'watching') { f.last_watched_at = iso(); if (!s.started_at) f.started_at = today(); }
+  if (st === 'completed') { f.completed_at = today(); if (s.total_eps) f.eps_watched = s.total_eps; }
+  patchShow(id, f);
+  if (st !== 'watching') S.sugg.filter((x) => x.show_id === id && x.kind === 'stale').forEach((x) => resolveSugg(x.id, 'accepted'));
+  if (st !== 'dropped' && s.cr_cleanup === 'queued') patchShow(id, { cr_cleanup: null }, { silent: true });
+  if (st === 'completed') finishSheet(id, true);
+  else toast(`Moved to ${st === 'plan' ? 'Plan to Watch' : STATUS_NAME[st]}`);
+  if (st === 'dropped' && s.cr_cleanup !== 'done') setTimeout(() => cleanupSheet(id), 350);
+}
+
+/* Drop cleanup — clear a dropped show off Crunchyroll's Continue Watching */
+function crLine(s) {
+  if (s.cr_cleanup === 'queued') return 'Muse clears it tonight · tap to cancel';
+  if (s.cr_cleanup === 'done') return `Cleared from your history ${s.cr_cleanup_at ? ago(s.cr_cleanup_at) : ''}`;
+  if (s.cr_cleanup === 'failed') return `Muse couldn't clear it${s.cr_cleanup_note ? ' (' + esc(s.cr_cleanup_note) + ')' : ''} · tap to retry`;
+  return 'Still in Continue Watching? Tap to clear it';
+}
+function cleanupPrompt(s) {
+  const names = [...new Set([s.title_en, s.title_romaji].filter(Boolean))];
+  return `In my Crunchyroll account, open https://www.crunchyroll.com/history and remove every entry for "${names[0]}"${names[1] ? ` (also called "${names[1]}")` : ''} from my watch history, so it no longer shows up in Continue Watching.${s.cr_url ? ` The show's page is ${s.cr_url}.` : ''} Remove all of its episodes and seasons. Don't remove anything for other shows and don't change anything else in my account. When you're done, tell me how many entries you removed.`;
+}
+function cleanupSheet(id) {
+  const s = S.shows.get(id); if (!s || s.cr_cleanup === 'done') return;
+  const o = openSheet('', { kind: 'cleanup' });
+  o.render = () => `<div style="text-align:center;padding:6px 0 4px">${cov(s, 'cov', true).replace('class="cov"', 'class="cov" style="width:84px;height:120px;margin:0 auto 14px;border-radius:14px"')}
+    <h2 style="margin:0 0 6px">Clear it off Crunchyroll?</h2><p class="muted" style="margin:0 0 18px;font-size:15px">Removes ${esc(title(s))} from your watch history so it stops showing in Continue Watching.</p>
+    <div class="stack"><button class="btn pri block" data-act="crq" data-id="${id}">Muse does it tonight</button><button class="btn block" data-act="crcopy" data-id="${id}">Copy a prompt to do it now</button><button class="btn ghost block" data-act="closesheet">Leave it</button></div></div>`;
+  refreshSheet(o);
+}
+/* Rating prompt — pops when a show hits its last episode or is marked Completed */
+function finishSheet(id, already) {
+  const s = S.shows.get(id); if (!s) return;
+  let val = s.rating || 0;
+  const o = openSheet('', { kind: 'finish' });
+  o.render = () => `<div style="text-align:center;padding:6px 0 4px">${cov(s, 'cov', true).replace('class="cov"', 'class="cov" style="width:96px;height:136px;margin:0 auto 14px;border-radius:14px"')}
+    <h2 style="margin:0 0 4px">${already ? 'Completed!' : 'That was the finale'}</h2><p class="muted" style="margin:0 0 18px">${esc(title(s))}</p>
+    <div style="display:flex;justify-content:center">${stars(val, 'frate', id, true)}</div>
+    <p class="faint" style="margin:8px 0 20px;font-weight:700">${val ? val + ' / 5' : 'Tap a star — left half for a half star'}</p>
+    <div class="stack"><button class="btn pri block" data-act="finishsave" data-id="${id}">${already ? 'Save rating' : 'Mark completed'}</button><button class="btn ghost block" data-act="closesheet">${already ? 'Skip' : 'Not yet'}</button></div></div>`;
+  o.setVal = (v) => { val = v; refreshSheet(o); };
+  o.getVal = () => val; o.already = already;
+  refreshSheet(o);
+}
+
+/* ═══════════════════════ INBOX ═══════════════════════ */
+function staleCheck() {
+  const days = setting('stale_days', 21), cut = nowMs() - days * 864e5;
+  for (const s of S.shows.values()) {
+    if (s.status !== 'watching' || s.never_nag) continue;
+    if (s.snooze_until && new Date(s.snooze_until).getTime() > nowMs()) continue;
+    const lw = s.last_watched_at ? new Date(s.last_watched_at).getTime() : 0;
+    if (lw > cut) continue;
+    const a = avail(s);
+    if (s.airing_status === 'RELEASING' && (a == null || a <= (s.eps_watched || 0))) continue; // just waiting on the next ep
+    addSugg(s.anilist_id, 'stale', { since: s.last_watched_at || null });
+  }
+}
+function openInbox() {
+  const o = openSheet('', { full: true, kind: 'inbox' });
+  o.render = () => {
+    const list = S.sugg.slice().sort((a, b) => a.created_at.localeCompare(b.created_at));
+    let h = `<h2>Suggestions</h2>`;
+    if (!list.length) return h + `<div class="empty"><div class="big">${I.check}</div><h2>Inbox zero</h2><p>Nothing to review. Nice.</p></div>`;
+    h += `<p class="muted" style="margin:-6px 2px 16px;font-size:14px">Nothing changes until you tap a choice.</p><div class="stack">`;
+    for (const g of list) h += suggHTML(g);
+    return h + '</div>';
+  };
+  refreshSheet(o);
+}
+function suggHTML(g) {
+  const s = S.shows.get(g.show_id), p = g.payload || {};
+  const head = (sub) => `<div class="top">${s ? cov(s) : ''}<div style="min-width:0"><div class="t">${esc(s ? title(s) : p.title || 'Crunchyroll')}</div><div class="q">${sub}</div></div></div>`;
+  if (g.kind === 'stale' && s) {
+    const w = s.eps_watched || 0, early = w < 5;
+    return `<div class="card sg fadein">${head(`Untouched ${s.last_watched_at ? ago(s.last_watched_at) : 'since import'} · ep ${w}${s.total_eps ? '/' + s.total_eps : ''}${early ? '<br>Barely started — dropping is totally fine.' : ''}`)}
+      <div class="acts"><button class="btn${early ? '' : ' pri'}" data-act="sg" data-sg="${g.id}" data-v="keep">Keep watching</button><button class="btn" data-act="sg" data-sg="${g.id}" data-v="hold">On hold</button><button class="btn${early ? ' pri' : ''}" data-act="sg" data-sg="${g.id}" data-v="drop">Drop</button></div>
+      <button class="btn ghost sm block" style="margin-top:6px" data-act="sg" data-sg="${g.id}" data-v="never">Never ask about this one</button></div>`;
+  }
+  if (g.kind === 'progress' && s) {
+    return `<div class="card sg fadein">${head(`You watched ep${p.from !== p.to ? `s ${p.from}–${p.to}` : ` ${p.to}`} on Crunchyroll. Cour has you at ep ${s.eps_watched || 0}.`)}
+      <div class="acts"><button class="btn pri" data-act="sg" data-sg="${g.id}" data-v="progress">Update to ep ${p.to}</button><button class="btn" data-act="sg" data-sg="${g.id}" data-v="ignore">Ignore</button></div></div>`;
+  }
+  if (g.kind === 'new_show') {
+    return `<div class="card sg fadein">${head(`Found in your Crunchyroll history${p.to ? ` (watched up to ep ${p.to})` : ''}. Add it?`)}
+      <div class="acts"><button class="btn pri" data-act="sg" data-sg="${g.id}" data-v="addnew">Add as Watching</button><button class="btn" data-act="sg" data-sg="${g.id}" data-v="ignore">Ignore</button></div></div>`;
+  }
+  if (g.kind === 'relogin') {
+    return `<div class="card sg fadein">${head("The nightly sync couldn't get into Crunchyroll. Log in again wherever Muse browses so syncing keeps working.")}
+      <div class="acts"><button class="btn pri" data-act="sg" data-sg="${g.id}" data-v="ok">Got it</button></div></div>`;
+  }
+  if (g.kind === 'note' && p.rate && s) {
+    return `<div class="card sg fadein">${head(`Finished on Crunchyroll · ${s.total_eps || s.eps_watched || ''} eps`)}
+      <div class="acts"><button class="btn pri" data-act="sg" data-sg="${g.id}" data-v="rate">Rate it</button><button class="btn" data-act="sg" data-sg="${g.id}" data-v="ok">Later</button></div></div>`;
+  }
+  return `<div class="card sg">${head(esc(p.text || g.kind))}<div class="acts"><button class="btn" data-act="sg" data-sg="${g.id}" data-v="ignore">Dismiss</button></div></div>`;
+}
+async function answerSugg(sgId, v) {
+  const g = S.sugg.find((x) => x.id === sgId); if (!g) return;
+  const id = g.show_id, s = S.shows.get(id), p = g.payload || {};
+  const days = setting('stale_days', 21);
+  if (v === 'keep') { patchShow(id, { snooze_until: new Date(nowMs() + days * 2 * 864e5).toISOString() }, { silent: true }); toast("Got it — won't ask for a while"); }
+  if (v === 'hold') { patchShow(id, { status: 'on_hold' }, { silent: true }); toast('Put on hold'); }
+  if (v === 'drop') { patchShow(id, { status: 'dropped' }, { silent: true }); toast('Dropped'); setTimeout(() => cleanupSheet(id), 450); }
+  if (v === 'never') { patchShow(id, { never_nag: true }, { silent: true }); toast("Won't ask about this one again"); }
+  if (v === 'progress' && s) { patchShow(id, { eps_watched: Math.max(s.eps_watched || 0, p.to), last_watched_at: p.at || iso() }, { silent: true }); toast(`Updated to ep ${p.to}`); if (s.total_eps && p.to >= s.total_eps && s.airing_status !== 'RELEASING') setTimeout(() => finishSheet(id), 450); }
+  if (v === 'rate' && s) setTimeout(() => finishSheet(id, true), 350);
+  if (v === 'addnew') {
+    try {
+      let m = mediaCache.get(id);
+      if (!m) { m = (await ani(`query($id:Int){Media(id:$id,type:ANIME){${MF}}}`, { id })).Media; mediaCache.set(id, m); }
+      const row = newRow(m, 'watching'); if (p.to) row.eps_watched = p.to;
+      putShows([row]); recomputeFranchises(); lookupSched([id]); toast('Added');
+    } catch (e) { return toast('Could not add: ' + e.message); }
+  }
+  resolveSugg(sgId, ['ignore'].includes(v) ? 'rejected' : 'accepted');
+  render();
+}
+
+/* ═══════════════════════ SETTINGS ═══════════════════════ */
+function renderSettings() {
+  const t = theme(), customs = setting('custom_themes', []);
+  const days = setting('stale_days', 21), dl = setting('default_lang', 'dub');
+  const sync = setting('sync', null);
+  const metaAt = LS.get('cour:metaAt', 0);
+  let h = `<div class="hdr"><div><h1>Settings</h1><div class="sub">${S.shows.size} shows · ${outbox.length ? outbox.length + ' changes waiting to sync' : 'All synced'}<span id="syncdot" class="syncdot"></span></div></div></div>`;
+  h += `<div class="sec">Theme</div><div class="tgal">${PRESETS.map((p) => tPrev({ ...t, preset: p.id, name: p.name, accent: null, id: null, wall: t.wall.type === 'photo' ? { type: 'gradient' } : t.wall }, p.name, 'preset', p.id, !t.id && t.preset === p.id)).join('')}${customs.map((c) => tPrev(c, c.name, 'custom', c.id, t.id === c.id)).join('')}</div>
+    <button class="btn block" data-act="themeedit">${I.paint} Customize theme</button>`;
+  h += `<div class="sec">Tracking</div><div class="card grp">
+    <div class="row" style="flex-wrap:wrap"><div class="lbl">Ask about idle shows after<small>Shows marked Never nag are skipped</small></div>
+      <div class="chips" style="width:100%">${[14, 21, 28, 42].map((d) => `<button class="chip${days === d ? ' on' : ''}" data-act="staledays" data-v="${d}">${d / 7} wks</button>`).join('')}</div></div>
+    <div class="row"><div class="lbl">New shows default to</div><div class="segc"><button class="${dl === 'sub' ? 'on' : ''}" data-act="deflang" data-v="sub">Sub</button><button class="${dl === 'dub' ? 'on' : ''}" data-act="deflang" data-v="dub">Dub</button></div></div>
+  </div>`;
+  h += `<div class="sec">Your list</div><div class="card grp">
+    <button class="row" style="width:100%;text-align:left" data-act="import"><div class="lbl">Import from MyAnimeList<small>Brings the export in as-is</small></div>${I.chev}</button>
+    <button class="row" style="width:100%;text-align:left" data-act="refresh"><div class="lbl">Refresh release data<small>${metaAt ? 'Last refreshed ' + ago(new Date(metaAt).toISOString()) : 'Not yet'}${S.schedOff ? ' · Dub schedule not connected' : ''}</small></div>${I.refresh.replace('<svg', '<svg class="chev"')}</button>
+    <button class="row" style="width:100%;text-align:left" data-act="export"><div class="lbl">Export backup<small>Full JSON of your list + settings</small></div>${I.download.replace('<svg', '<svg class="chev"')}</button>
+  </div>`;
+  const lr = sync && sync.last_result;
+  const lines = lr ? [...(lr.updated || []).map((u) => `${esc(u.title)} → ep ${u.to}${u.completed ? ' · finished' : ''}`), ...(lr.added || []).map((a) => `Added ${esc(a.title)} (ep ${a.to})`), ...(lr.cleaned || []).map((t) => `Cleared ${esc(t)} off Crunchyroll`)] : [];
+  h += `<div class="sec">Crunchyroll sync</div><div class="card grp"><div class="row"><div class="lbl">Nightly sync${sync && sync.source ? ' · ' + esc(sync.source[0].toUpperCase() + sync.source.slice(1)) : ''}<small>${sync && sync.last_run ? `Last run ${ago(sync.last_run)}${sync.needs_login ? ' · <b style="color:var(--warn)">needs Crunchyroll login</b>' : lr ? ` · ${(lr.updated || []).length} updated, ${(lr.added || []).length} added${lr.inbox ? `, ${lr.inbox} to review` : ''}` : ''}` : 'Not run yet. Muse checks your Crunchyroll history each night and posts it here.'}</small></div></div>${lines.length ? `<div class="row" style="display:block"><div class="lbl"><small style="line-height:1.55">${lines.slice(0, 8).join('<br>')}${lines.length > 8 ? `<br>+${lines.length - 8} more` : ''}</small></div></div>` : ''}</div>`;
+  h += `<div class="sec">This device</div><div class="card grp"><button class="row" style="width:100%;text-align:left" data-act="lockdevice"><div class="lbl">Lock this device<small>Forgets the passcode here</small></div>${I.lock.replace('<svg', '<svg class="chev"')}</button></div>`;
+  h += `<p class="faint" style="text-align:center;font-size:12px;margin-top:26px">Cour · ${APP_VERSION}</p>`;
+  $('#settings').innerHTML = h;
+}
+function tPrev(t, name, kind, id, on) {
+  const T = tokensFor(t);
+  const bg = `${T['--wall']}, ${T['--base']}`;
+  return `<button class="tprev${on ? ' on' : ''}" data-act="pickt" data-kind="${kind}" data-v="${esc(id)}"><div class="pv" style="background:${esc(bg)};background-size:cover;background-position:center">
+    <div class="c1" style="background:${T['--card']};border-radius:${T['--r-sm']}"></div><div class="c2" style="background:${T['--card']};border-radius:${T['--r-sm']}"></div>
+    <div class="ac" style="background:${T['--accent']}"></div><div class="rg" style="border-color:${T['--accent']}"></div></div><span>${esc(name)}</span></button>`;
+}
+let themeSaveT;
+function setTheme(patch, persist = true) {
+  const t = { ...theme(), ...patch };
+  if (patch.wall) t.wall = { ...theme().wall, ...patch.wall };
+  S.settings.theme = t; applyTheme(t);
+  clearTimeout(themeSaveT);
+  if (persist) themeSaveT = setTimeout(() => setSetting('theme', t), 400);
+  dirty.add('settings'); if (S.tab === 'settings') { renderSettings(); dirty.delete('settings'); }
+}
+function openThemeEditor() {
+  const o = openSheet('', { full: true, kind: 'theme' });
+  o.render = () => {
+    const t = theme(), customs = setting('custom_themes', []);
+    const cur = t.accent || (PRESETS.find((p) => p.id === t.preset) || PRESETS[0]).accent;
+    let h = `<h2>Customize</h2>`;
+    h += `<div class="sec">Appearance</div><div class="segc">${['light', 'dark', 'auto'].map((m) => `<button class="${t.mode === m ? 'on' : ''}" data-act="tset" data-k="mode" data-v="${m}">${m[0].toUpperCase() + m.slice(1)}</button>`).join('')}</div>`;
+    h += `<div class="sec">Accent</div><div class="swatches">${ACCENTS.map((c) => `<button class="sw${cur.toLowerCase() === c ? ' on' : ''}" style="background:${c}" data-act="tset" data-k="accent" data-v="${c}"></button>`).join('')}
+      <label class="sw" style="background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red);position:relative;overflow:hidden"><input type="color" id="tcolor" value="${esc(cur)}" style="opacity:0;position:absolute;inset:0;width:100%;height:100%"></label></div>
+      ${t.wall.type === 'photo' ? `<button class="btn sm" style="margin-top:10px" data-act="tset" data-k="accentFromWall">${I.sparkle} Pull accent from wallpaper</button>` : ''}`;
+    h += `<div class="sec">Glass <span style="text-transform:none;letter-spacing:0;font-weight:600">— lower is faster</span></div><input type="range" min="0" max="100" value="${t.glass}" data-range="glass">`;
+    h += `<div class="sec">Roundness</div><input type="range" min="0" max="100" value="${t.round}" data-range="round">`;
+    h += `<div class="sec">Font</div><div class="chips">${Object.keys(FONTS).map((f) => `<button class="chip${t.font === f ? ' on' : ''}" style="font-family:${esc(FONTS[f])}" data-act="tset" data-k="font" data-v="${f}">${f[0].toUpperCase() + f.slice(1)}</button>`).join('')}</div>`;
+    h += `<div class="sec">Wallpaper</div><div class="chips">${[['gradient', 'Gradient'], ['photo', 'Photo'], ['none', 'Plain']].map(([k, l]) => `<button class="chip${t.wall.type === k ? ' on' : ''}" data-act="twall" data-v="${k}">${l}</button>`).join('')}</div>`;
+    if (t.wall.type === 'photo') {
+      h += `<label class="btn block" style="margin-top:10px">${I.upload} ${t.wall.photo ? 'Change photo' : 'Choose photo'}<input type="file" accept="image/*" id="twallfile" hidden></label>
+        <div class="sec">Dim</div><input type="range" min="0" max="85" value="${t.wall.dim}" data-range="dim">
+        <div class="sec">Blur</div><input type="range" min="0" max="60" value="${t.wall.blur}" data-range="blur">`;
+    }
+    h += `<div class="sec">Save</div><div style="display:flex;gap:8px"><input class="field" id="tname" placeholder="Theme name" value="${t.id ? esc(t.name) : ''}" style="flex:1"><button class="btn pri" data-act="tsave">Save</button></div>`;
+    if (customs.length) h += `<div class="sec">Your themes</div><div class="card grp">${customs.map((c) => `<div class="row"><div class="lbl">${esc(c.name)}</div><button class="btn sm ghost danger" data-act="tdel" data-v="${esc(c.id)}">Delete</button></div>`).join('')}</div>`;
+    h += `<button class="btn block" style="margin-top:22px" data-act="closesheet">Done</button>`;
+    return h;
+  };
+  refreshSheet(o);
+  o.sh.addEventListener('input', (e) => {
+    const r = e.target.dataset.range;
+    if (r === 'glass' || r === 'round') setTheme({ [r]: Number(e.target.value) }, false);
+    if (r === 'dim' || r === 'blur') setTheme({ wall: { [r]: Number(e.target.value) } }, false);
+    if (e.target.id === 'tcolor') setTheme({ accent: e.target.value }, false);
+  });
+  o.sh.addEventListener('change', async (e) => {
+    if (e.target.dataset.range || e.target.id === 'tcolor') { setSetting('theme', theme()); refreshSheet(o); }
+    if (e.target.id === 'twallfile' && e.target.files[0]) {
+      try { const p = await photoToData(e.target.files[0]); o.wallAccent = p.accent; setTheme({ wall: { type: 'photo', photo: p.data }, ...(theme().accentFromWall && p.accent ? { accent: p.accent } : {}) }); refreshSheet(o); }
+      catch { toast("Couldn't read that photo"); }
+    }
+  });
+  return o;
+}
+
+/* ═══════════════════════ MAL IMPORT ═══════════════════════ */
+function malStatus(v) {
+  const s = String(v).toLowerCase().trim();
+  return { watching: 'watching', 1: 'watching', completed: 'completed', 2: 'completed', 'on-hold': 'on_hold', 'on hold': 'on_hold', 3: 'on_hold', dropped: 'dropped', 4: 'dropped', 'plan to watch': 'plan', 6: 'plan' }[s] || 'plan';
+}
+const malDate = (v) => (/^\d{4}-\d{2}-\d{2}$/.test(v) && !v.startsWith('0000') ? v.replace(/-00/g, '-01') : null);
+async function readMal(file) {
+  let buf = new Uint8Array(await file.arrayBuffer());
+  if (buf[0] === 0x1f && buf[1] === 0x8b) {
+    if (!('DecompressionStream' in window)) throw new Error('Unzip the .gz file first, then pick the .xml.');
+    buf = new Uint8Array(await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
+  }
+  const doc = new DOMParser().parseFromString(new TextDecoder().decode(buf), 'text/xml');
+  const an = [...doc.getElementsByTagName('anime')];
+  if (!an.length) throw new Error("That doesn't look like a MyAnimeList anime export.");
+  const v = (el, t) => { const x = el.getElementsByTagName(t)[0]; return x ? x.textContent.trim() : ''; };
+  return an.map((el) => ({
+    mal_id: Number(v(el, 'series_animedb_id')), title: v(el, 'series_title'),
+    watched: Number(v(el, 'my_watched_episodes')) || 0, score: Number(v(el, 'my_score')) || 0,
+    status: malStatus(v(el, 'my_status')), start: malDate(v(el, 'my_start_date')), finish: malDate(v(el, 'my_finish_date')),
+  })).filter((x) => x.mal_id);
+}
+function openImport() {
+  const o = openSheet('', { full: true, kind: 'import' });
+  o.state = { step: 'pick' };
+  o.render = () => {
+    const st = o.state;
+    let h = `<h2>Import from MyAnimeList</h2>`;
+    if (st.step === 'pick') {
+      h += `<div class="card" style="padding:16px;line-height:1.5"><b>Get your export</b><div class="muted" style="font-size:14.5px;margin-top:6px">On MAL go to <b>Profile → Export</b> (myanimelist.net/panel.php?go=export), pick <b>Anime List</b>, and download it. You'll get a <b>.xml.gz</b> file — pick it here as-is, no unzipping or cleanup.</div></div>
+        <label class="btn pri block" style="margin-top:14px">${I.upload} Choose export file<input type="file" id="malfile" hidden></label>
+        ${st.err ? `<p style="color:var(--bad);margin:12px 4px">${esc(st.err)}</p>` : ''}`;
+    } else if (st.step === 'review') {
+      const c = {}; st.entries.forEach((e) => (c[e.status] = (c[e.status] || 0) + 1));
+      h += `<div class="card grp">${STATUS.map(([k, l]) => `<div class="row"><div class="lbl">${k === 'plan' ? 'Plan to Watch' : l}</div><b>${c[k] || 0}</b></div>`).join('')}</div>
+        <p class="muted" style="font-size:14px;margin:12px 4px">${st.fresh.length} new${st.entries.length - st.fresh.length ? ` · ${st.entries.length - st.fresh.length} already in Cour (skipped)` : ''}. Shows you're "Watching" will get a quick keep/hold/drop check in the inbox — that's the cleanup.</p>
+        <button class="btn pri block" data-act="impgo" ${st.fresh.length ? '' : 'disabled'}>Import ${st.fresh.length} shows</button>`;
+    } else if (st.step === 'run') {
+      h += `<p class="muted">Matching your list with AniList for covers, titles and episode counts…</p><div class="progbar"><i style="width:${Math.round((st.done / st.total) * 100)}%"></i></div><p class="faint" style="font-size:13px">${st.done} / ${st.total}</p>`;
+    } else if (st.step === 'done') {
+      h += `<div class="empty" style="padding-top:20px"><div class="big">${I.check}</div><h2>${st.added} shows imported</h2><p>${st.missed.length ? `${st.missed.length} couldn't be matched on AniList:` : 'Everything matched.'}</p></div>
+        ${st.missed.length ? `<div class="card grp">${st.missed.slice(0, 40).map((m) => `<div class="row"><div class="lbl" style="font-weight:500">${esc(m.title)}<small>MAL #${m.mal_id}</small></div></div>`).join('')}</div>` : ''}
+        <button class="btn pri block" style="margin-top:16px" data-act="closesheet">Done</button>`;
+    }
+    return h;
+  };
+  refreshSheet(o);
+  o.sh.addEventListener('change', async (e) => {
+    if (e.target.id !== 'malfile' || !e.target.files[0]) return;
+    try {
+      const entries = await readMal(e.target.files[0]);
+      const have = new Set([...S.shows.values()].map((s) => s.mal_id));
+      o.state = { step: 'review', entries, fresh: entries.filter((x) => !have.has(x.mal_id)) };
+    } catch (err) { o.state = { step: 'pick', err: err.message }; }
+    refreshSheet(o);
+  });
+  o.run = async () => {
+    const fresh = o.state.fresh;
+    o.state = { step: 'run', done: 0, total: fresh.length }; refreshSheet(o);
+    let media;
+    try { media = await aniBatch('idMal_in', fresh.map((x) => x.mal_id), (d, t) => { o.state.done = d; refreshSheet(o); }); }
+    catch (err) { o.state = { step: 'pick', err: 'AniList lookup failed: ' + err.message + ' — try again in a minute.' }; return refreshSheet(o); }
+    const byMal = new Map(media.map((m) => [m.idMal, m]));
+    const rows = [], missed = [];
+    for (const e of fresh) {
+      const m = byMal.get(e.mal_id);
+      if (!m || S.shows.has(m.id)) { if (!m) missed.push(e); continue; }
+      const r = newRow(m, e.status);
+      r.eps_watched = r.total_eps ? Math.min(e.watched, r.total_eps) : e.watched;
+      if (e.status === 'completed' && r.total_eps) r.eps_watched = r.total_eps;
+      r.rating = e.score ? e.score / 2 : null;
+      r.started_at = e.start; r.completed_at = e.finish;
+      r.last_watched_at = e.status === 'watching' ? null : (e.finish ? e.finish + 'T12:00:00Z' : null);
+      rows.push(r);
+    }
+    putShows(rows); recomputeFranchises(); staleCheck(); render();
+    o.state = { step: 'done', added: rows.length, missed }; refreshSheet(o);
+    refreshDub(true).catch(() => {});
+  };
+}
+
+/* ═══════════════════════ EXPORT ═══════════════════════ */
+async function exportJSON() {
+  const data = { app: 'cour', version: 1, build: APP_VERSION, exported_at: iso(), shows: [...S.shows.values()], settings: S.settings, pending_suggestions: S.sugg };
+  const name = `cour-backup-${today()}.json`;
+  const blob = new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' });
+  const file = new File([blob], name, { type: 'application/json' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], title: name }); return; } catch (e) { if (e.name === 'AbortError') return; } }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+
+/* ═══════════════════════ RELEASE DATA REFRESH ═══════════════════════ */
+async function refreshMeta(force) {
+  if (!force && nowMs() - LS.get('cour:metaAt', 0) < 6 * 36e5) return;
+  const ids = [...S.shows.values()].filter((s) => ['watching', 'on_hold', 'plan'].includes(s.status) && (force || s.airing_status !== 'FINISHED' || !s.meta_updated_at || s.status === 'watching' && !s.total_eps)).map((s) => s.anilist_id);
+  if (ids.length) {
+    const media = await aniBatch('id_in', ids);
+    const rows = [];
+    for (const m of media) {
+      const cur = S.shows.get(m.id); if (!cur) continue;
+      const meta = metaFrom(m, cur);
+      const changed = ['total_eps', 'airing_status', 'sub_next_ep', 'sub_next_at', 'cover', 'title_en', 'cr_url'].some((k) => String(meta[k]) !== String(cur[k]));
+      if (changed || force) rows.push(meta);
+    }
+    if (rows.length) { putShows(rows); recomputeFranchises(); }
+  }
+  LS.set('cour:metaAt', nowMs());
+  render();
+}
+const schedH = () => ({ 'x-cour-key': KEY() || '' });
+async function lookupSched(ids) {
+  ids = ids.filter((id) => { const s = S.shows.get(id); return s && !s.sched_route; }).slice(0, 25);
+  if (!ids.length) return;
+  try {
+    const j = await fetch('/api/schedule?op=lookup&anilist=' + ids.join(','), { headers: schedH() }).then((r) => r.json());
+    if (j.disabled) { S.schedOff = true; return; }
+    for (const id of ids) {
+      const m = j.map && j.map[id], s = S.shows.get(id); if (!s) continue;
+      const f = { sched_route: m && m.route ? m.route : '-' };
+      if (m && m.cr && !s.cr_url) f.cr_url = m.cr;
+      patchShow(id, f, { silent: true });
+    }
+  } catch {}
+}
+async function refreshDub(force) {
+  if (!force && nowMs() - LS.get('cour:dubAt', 0) < 2 * 36e5) return;
+  const shows = [...S.shows.values()].filter((s) => (s.status === 'watching' || s.status === 'on_hold') && s.lang === 'dub');
+  if (!shows.length) return;
+  const j = await fetch('/api/schedule?op=timetable', { headers: schedH() }).then((r) => r.json());
+  if (j.disabled) { S.schedOff = true; return; }
+  if (!j.dub) return;
+  S.schedOff = false;
+  await lookupSched(shows.map((s) => s.anilist_id));
+  const byRoute = new Map(), byTitle = new Map();
+  for (const e of j.dub) {
+    (byRoute.get(e.route) || byRoute.set(e.route, []).get(e.route)).push(e);
+    for (const t of [e.title, e.english, e.romaji]) if (t) byTitle.set(norm(t).replace(/ dub$/, ''), e.route);
+  }
+  for (const s of shows) {
+    let route = s.sched_route && s.sched_route !== '-' ? s.sched_route : null;
+    if (!route || !byRoute.has(route)) route = [s.title_en, s.title_romaji].map((t) => byTitle.get(norm(t))).find(Boolean) || route;
+    const es = route && byRoute.get(route); if (!es) continue;
+    let latest = null, next = null;
+    for (const e of es) {
+      let ep = Number(e.ep); if (!ep) continue;
+      if (s.total_eps && ep > s.total_eps && e.sub > 0 && e.sub <= s.total_eps) ep = e.sub;
+      const at = e.delayedUntil && new Date(e.delayedUntil) > new Date(e.at) ? e.delayedUntil : e.at;
+      const t = new Date(at).getTime();
+      if (t <= nowMs()) latest = Math.max(latest ?? 0, ep); else if (!next || t < next.t) next = { ep, t };
+    }
+    const f = {};
+    if (latest != null && latest > (s.dub_latest_ep || 0)) f.dub_latest_ep = latest;
+    const nAt = next ? new Date(next.t).toISOString() : null;
+    if (next && (s.dub_next_ep !== next.ep || s.dub_next_at !== nAt)) { f.dub_next_ep = next.ep; f.dub_next_at = nAt; }
+    if (route !== s.sched_route) f.sched_route = route;
+    if (Object.keys(f).length) patchShow(s.anilist_id, f, { silent: true });
+  }
+  LS.set('cour:dubAt', nowMs());
+  render();
+}
+
+/* ═══════════════════════ LOCK / TOAST / SYNC ═══════════════════════ */
+function lock() { $('#lock').classList.add('on'); }
+async function unlock() {
+  const v = $('#pass').value.trim(); if (!v) return;
+  LS.set('cour:key', v); $('#lockerr').textContent = '';
+  try { await api({ op: 'ping' }); $('#lock').classList.remove('on'); $('#pass').value = ''; $('#pass').blur(); sync(); }
+  catch (e) { LS.del('cour:key'); $('#lockerr').textContent = e.status === 401 ? "That passcode didn't match." : e.message; }
+}
+let toastT;
+function toast(msg, act, fn) {
+  const t = $('#toast');
+  t.innerHTML = `<span>${esc(msg)}</span>${act ? `<button>${esc(act)}</button>` : ''}`;
+  t.classList.toggle('noact', !act);
+  if (act) t.querySelector('button').onclick = () => { fn(); t.classList.remove('on'); };
+  t.classList.add('on'); clearTimeout(toastT);
+  toastT = setTimeout(() => t.classList.remove('on'), act ? 4500 : 2400);
+}
+let lastSync = 0;
+async function sync() {
+  if (S.syncing || !KEY()) return;
+  S.syncing = true; syncDot(); lastSync = nowMs();
+  try {
+    await flush();
+    const j = await api({ op: 'load' });
+    S.shows = new Map((j.shows || []).map((s) => [s.anilist_id, s]));
+    S.sugg = j.suggestions || [];
+    S.settings = Object.fromEntries((j.settings || []).map((x) => [x.key, x.value]));
+    reapplyOutbox();
+    S.loaded = true; recomputeFranchises(); saveCache(); applyTheme(); render();
+    staleCheck(); render();
+    syncNews();
+    if (j.version && j.version !== APP_VERSION) showUpdate();
+    refreshMeta().catch((e) => console.warn('meta', e)).finally(() => refreshDub().catch((e) => console.warn('dub', e)));
+  } catch (e) {
+    if (e.status === 401) lock();
+    else if (e.status) toast(e.message);
+  } finally { S.syncing = false; syncDot(); }
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden && nowMs() - lastSync > 60000) sync(); });
+
+/* ═══════════════════════ EVENTS ═══════════════════════ */
+const ACT = {
+  tab: (el) => setTab(el.dataset.tab),
+  lib: (el) => setLib(el.dataset.st),
+  open: (el, id) => openDetail(id),
+  preview: (el, id) => openAny(id),
+  openfr: (el, id) => openFranchise(id),
+  plus1: (el, id) => plus1(id),
+  minus1: (el, id) => { const s = S.shows.get(id); if (s && s.eps_watched > 0) patchShow(id, { eps_watched: s.eps_watched - 1 }); },
+  status: (el, id) => setStatus(id, el.dataset.st),
+  rate: (el, id, e) => { const s = S.shows.get(id); const v = starVal(el, e); patchShow(id, { rating: Number(s.rating) === v ? null : v }); },
+  frate: (el, id, e) => { const o = sheets[sheets.length - 1]; const v = starVal(el, e); o.setVal(o.getVal() === v ? 0 : v); },
+  finishsave: (el, id) => {
+    const o = sheets[sheets.length - 1], v = o.getVal(), s = S.shows.get(id);
+    const f = { rating: v || null };
+    if (!o.already) { f.status = 'completed'; f.completed_at = today(); if (s.total_eps) f.eps_watched = s.total_eps; }
+    patchShow(id, f); closeSheet(o); toast(o.already ? (v ? 'Rated ' + v + ' ★' : 'Saved') : 'Completed' + (v ? ' · ' + v + ' ★' : ''));
+  },
+  lang: (el, id) => patchShow(id, { lang: el.dataset.v }),
+  crq: (el, id) => { patchShow(id, { cr_cleanup: 'queued', cr_cleanup_at: iso(), cr_cleanup_note: null }); closeSheet(sheets.find((o) => o.kind === 'cleanup')); toast('Muse will clear it tonight'); refreshSheets(); },
+  crcopy: async (el, id) => {
+    const s = S.shows.get(id); const txt = cleanupPrompt(s);
+    try { await navigator.clipboard.writeText(txt); toast('Copied. Paste it into Muse'); }
+    catch { const o = openSheet(`<h2>Copy this into Muse</h2><textarea class="field" style="height:180px" readonly>${esc(txt)}</textarea>`); setTimeout(() => { const t = o.sh.querySelector('textarea'); t.focus(); t.select(); }, 350); return; }
+    closeSheet(sheets.find((o) => o.kind === 'cleanup'));
+  },
+  crrow: (el, id) => { const s = S.shows.get(id); if (s.cr_cleanup === 'queued') { patchShow(id, { cr_cleanup: null }); toast('Cancelled'); refreshSheets(); } else cleanupSheet(id); },
+  nag: (el, id) => { const s = S.shows.get(id); patchShow(id, { never_nag: !s.never_nag }); },
+  editlink: (el, id) => {
+    const s = S.shows.get(id);
+    const o = openSheet(`<h2>Crunchyroll link</h2><p class="muted" style="margin:-6px 2px 14px;font-size:14px">Paste the show's page from the Crunchyroll app (Share → Copy Link).</p><input class="field" id="crurl" type="url" placeholder="https://www.crunchyroll.com/series/…" value="${esc(s.cr_url || '')}"><div class="stack" style="margin-top:12px"><button class="btn pri block" data-act="savelink" data-id="${id}">Save</button><button class="btn ghost block" data-act="closesheet">Cancel</button></div>`);
+    setTimeout(() => o.sh.querySelector('#crurl').focus(), 350);
+  },
+  savelink: (el, id) => { const v = $('#crurl').value.trim(); if (v && !/^https?:\/\//.test(v)) return toast('That needs to be a full link'); patchShow(id, { cr_url: v || null }); closeSheet(); },
+  remove: (el, id) => {
+    const o = sheets.find((x) => x.kind === 'detail' && x.id === id);
+    if (o && !o.confirmRemove) { o.confirmRemove = true; refreshSheet(o); setTimeout(() => { if (o.confirmRemove) { o.confirmRemove = false; sheets.includes(o) && refreshSheet(o); } }, 3000); return; }
+    const s = S.shows.get(id); const backup = { ...s };
+    deleteShow(id); closeSheet(o); recomputeFranchises(); render();
+    toast('Removed', 'Undo', () => { putShows([backup]); recomputeFranchises(); render(); });
+  },
+  add: (el, id) => { addShow(id, el.dataset.st); },
+  quickadd: (el, id) => { addShow(id, 'plan'); renderSearch(); },
+  inbox: () => openInbox(),
+  sg: (el) => answerSugg(el.dataset.sg, el.dataset.v),
+  closesheet: (el) => closeSheet(sheets.find((o) => o.sh.contains(el)) || sheets[sheets.length - 1]),
+  clearq: () => { $('#q').value = ''; onQ(); $('#q').focus(); },
+  import: () => openImport(),
+  impgo: () => { const o = sheets.find((x) => x.kind === 'import'); o && o.run(); },
+  export: () => exportJSON(),
+  refresh: async (el) => { toast('Refreshing…'); try { await refreshMeta(true); await refreshDub(true); toast('Release data updated'); } catch (e) { toast('Refresh failed: ' + e.message); } },
+  staledays: (el) => { setSetting('stale_days', Number(el.dataset.v)); renderSettings(); },
+  deflang: (el) => { setSetting('default_lang', el.dataset.v); renderSettings(); },
+  lockdevice: () => { LS.del('cour:key'); LS.del('cour:cache'); S.shows.clear(); S.sugg = []; render(); lock(); },
+  unlock: () => unlock(),
+  themeedit: () => openThemeEditor(),
+  pickt: (el) => {
+    if (el.dataset.kind === 'preset') { const p = PRESETS.find((x) => x.id === el.dataset.v); const cur = theme(); setTheme({ preset: p.id, name: p.name, accent: null, id: null, wall: cur.wall.type === 'photo' ? { type: 'gradient' } : cur.wall }); }
+    else { const c = setting('custom_themes', []).find((x) => x.id === el.dataset.v); if (c) setTheme({ ...c }); }
+  },
+  tset: (el) => {
+    const k = el.dataset.k;
+    if (k === 'accentFromWall') { const o = sheets.find((x) => x.kind === 'theme'); const a = o && o.wallAccent; if (a) setTheme({ accent: a, accentFromWall: true }); else toast('Pick a photo first'); }
+    else setTheme({ [k]: el.dataset.v });
+    refreshSheets();
+  },
+  twall: (el) => { setTheme({ wall: { type: el.dataset.v } }); refreshSheets(); },
+  tsave: () => {
+    const name = ($('#tname').value || '').trim() || 'My theme';
+    const list = setting('custom_themes', []).slice(); const t = theme();
+    const ex = t.id && list.find((x) => x.id === t.id);
+    const saved = { ...t, name, id: ex ? t.id : uuid() };
+    if (ex) list[list.indexOf(ex)] = saved; else list.push(saved);
+    setSetting('custom_themes', list); setTheme(saved); refreshSheets(); toast(`Saved “${name}”`);
+  },
+  tdel: (el) => { setSetting('custom_themes', setting('custom_themes', []).filter((x) => x.id !== el.dataset.v)); if (theme().id === el.dataset.v) setTheme({ id: null }); refreshSheets(); renderSettings(); },
+};
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const fn = ACT[el.dataset.act]; if (!fn) return;
+  if (el.tagName !== 'A') e.preventDefault();
+  fn(el, Number(el.dataset.id), e);
+});
+$('#q').addEventListener('input', onQ);
+$('#q').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); $('#q').blur(); } });
+$('#pass').addEventListener('keydown', (e) => { if (e.key === 'Enter') unlock(); });
+if (window.visualViewport) {
+  const vv = visualViewport;
+  const upd = () => { const kb = Math.max(0, innerHeight - vv.height - vv.offsetTop); document.documentElement.style.setProperty('--kb', kb + 'px'); document.body.classList.toggle('kb', kb > 80); };
+  vv.addEventListener('resize', upd); vv.addEventListener('scroll', upd);
+}
+
+/* ═══════════════════════ BOOT ═══════════════════════ */
+
+/* ─── nightly sync news + update banner ─── */
+function syncNews() {
+  const sy = setting('sync', null), lr = sy && sy.last_result;
+  if (!sy || !sy.last_run || sy.last_run <= LS.get('cour:seenSync', '')) return;
+  LS.set('cour:seenSync', sy.last_run);
+  if (sy.needs_login) return toast('Sync needs a Crunchyroll login', 'See', () => setTab('settings'));
+  const n = lr ? (lr.updated || []).length + (lr.added || []).length : 0;
+  if (n) toast(`Muse updated ${n} show${n === 1 ? '' : 's'}`, 'See', () => setTab('settings'));
+}
+let updShown = false;
+function showUpdate() {
+  if (updShown) return; updShown = true;
+  const b = document.createElement('button');
+  b.id = 'updbar'; b.textContent = 'Update ready · tap to reload';
+  b.onclick = () => location.reload();
+  document.body.appendChild(b);
+}
+async function checkVersion() {
+  try {
+    const j = await fetch('/version.json?t=' + nowMs(), { cache: 'no-store' }).then((r) => r.json());
+    if (j.version && j.version !== APP_VERSION) showUpdate();
+  } catch {}
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) checkVersion(); });
+setInterval(checkVersion, 15 * 60e3);
+
+(function boot() {
+  loadCache();
+  applyTheme();
+  renderTabs();
+  render();
+  setTab(S.tab === 'search' ? 'home' : S.tab, { nofocus: true });
+  if (!KEY()) return lock();
+  sync();
+})();
+
+</script>
+</body>
+</html>
